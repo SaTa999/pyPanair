@@ -56,3 +56,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#PyCharm
+.idea/
+
+#src from PDAS
+a502/
+makewgs/
