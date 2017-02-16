@@ -4,7 +4,7 @@ A pre / post processor for PANAIR.
 A copy of each of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
 
 ## What can "pyPanair" do?  
-Currently, a post processor for agps files is implemented (agps_converter).  
+Currently, post processors for agps files (agps_converter) and ffmf files (ffmf_converter) are implemented .  
 
 List of things that will be implemented **soon<sup>TM</sup>**  
 * [ ] Preprocessor for a simple wing geometry
@@ -12,5 +12,5 @@ List of things that will be implemented **soon<sup>TM</sup>**
 * [ ] Postprocessor for calculating the spanwise local lift distribution
 
 ## Requirements
-pyPANAIR requires python 3.  
+pyPanair requires python 3.  
 An [Anaconda3](https://www.continuum.io/) environment is recommended.
