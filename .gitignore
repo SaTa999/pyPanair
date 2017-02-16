@@ -66,3 +66,6 @@ makewgs/
 
 # sandbox
 sandbox/
+
+# pdf
+*.pdf
