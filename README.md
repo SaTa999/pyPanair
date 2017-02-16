@@ -1,7 +1,7 @@
 #pyPanair
 A pre / post processor for PANAIR.  
-a502 (PANAIR), panain, and makewgs are not included in this repo.  
-Copies of these softwares can be obtained at[Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
+"a502" (PANAIR), "panain", and "makewgs" are not included in this repo.  
+A copy of each of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
 
 ## What can "pyPanair" do?  
 Currently, a post processor for agps files is implemented (agps_converter).  
