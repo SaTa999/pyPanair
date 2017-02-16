@@ -55,6 +55,7 @@ def write_vtk(n_wake=None, outputname="agps"):
     with open("{}.vtk".format(outputname), "w") as f:
         f.write(vtk)
 
+
 def write_vtm(n_wake=None, outputname="agps"):
     """convert agps networks to paraview unstructured grid
     each network will become a different vtu file
@@ -145,8 +146,6 @@ def write_vtm(n_wake=None, outputname="agps"):
         f.write(vtm)
 
 
-
-
 def write_tec(n_wake=None, outputname="agps"):
     """convert agps networks to tecplot finite element quadrilaterals"""
     data, n_wake = _read_agps_specify_nwake(n_wake) # read agps file & specify the number of networks to omit
@@ -190,6 +189,7 @@ def write_tec(n_wake=None, outputname="agps"):
         tec += quads
     with open("{}.dat".format(outputname), "w") as f:
         f.write(tec)
+
 
 def _read_agps_specify_nwake(n_wake = None):
     # the last "n_wake" networks will be omitted from the output file (e.g. if there are two wakes enter 2)

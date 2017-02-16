@@ -10,9 +10,5 @@
     <DataSet index="network7" file="agps_vtu/agps7.vtu"/>
     <DataSet index="network8" file="agps_vtu/agps8.vtu"/>
     <DataSet index="network9" file="agps_vtu/agps9.vtu"/>
-    <DataSet index="network10" file="agps_vtu/agps10.vtu"/>
-    <DataSet index="network11" file="agps_vtu/agps11.vtu"/>
-    <DataSet index="network12" file="agps_vtu/agps12.vtu"/>
-    <DataSet index="network13" file="agps_vtu/agps13.vtu"/>
   </vtkMultiBlockDataSet>
 </VTKFile>
