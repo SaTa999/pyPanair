@@ -9,3 +9,4 @@ Currently, a post processor for agps files is implemented (agps_converter).
 List of things that will be implemented **soon<sup>TM</sup>**  
 * [ ] Preprocessor for a simple wing geometry
 * [ ] Preprocessor for wing & body geometry
+* [ ] Postprocessor for calculating the spanwise local lift distribution
