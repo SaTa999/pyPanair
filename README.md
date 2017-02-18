@@ -28,3 +28,7 @@ pip install git+https://github.com/SaTa999/pyPanair
 pyPanair requires python 3  
 (tests have only been performed for python 3.6)  
 An [Anaconda3](https://www.continuum.io/) environment is recommended.
+
+## Example
+Example scripts and files are bundled in the "examples" directory.  
+Run the scripts in each directory to check out what pyPanair is capable of.   
