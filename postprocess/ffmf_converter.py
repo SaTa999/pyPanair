@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+__author__ = "stakanashi"
 import pandas as pd
+
 
 def read_ffmf(inpfilepath="ffmf"):
     ffmf = []
@@ -19,3 +21,8 @@ def read_ffmf(inpfilepath="ffmf"):
                 pass
     ffmf = pd.DataFrame(ffmf, columns=columns)
     return ffmf
+
+  
+def write_ffmf(outfilepath="ffmf.csv"):
+    ffmf = read_ffmf()
+    ffmf.to_csv(outfilepath, index=None)

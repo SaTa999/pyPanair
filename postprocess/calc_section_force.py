@@ -2,15 +2,16 @@
 __author__ = "stakanashi"
 import numpy as np
 import pandas as pd
-from .agps_reader import read_agps
+from .agps_converter import read_agps
 
 
 def rot(v, theta, degrees=True):
+    """rotate the vector for theta degrees (or radians)"""
     if degrees:
         theta = np.radians(theta)
     r = np.array([[np.cos(-theta), -np.sin(-theta)],
                   [np.sin(-theta), np.cos(-theta)]])
-    return np.dot(r, v)
+    return r @ v
 
 
 def calc_section_force(aoa, mac, rot_center, casenum, networknum):

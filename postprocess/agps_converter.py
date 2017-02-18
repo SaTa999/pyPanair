@@ -2,15 +2,67 @@
 __author__ = "stakanashi"
 import numpy as np
 import os
-import sys
-from .agps_reader import read_agps
 
 
-def write_vtk(n_wake=None, outputname="agps"):
+def read_column(file, firstline):
+    """read a column from first line (e.g. n01c001) to *eof"""
+    column = list()
+    line = firstline
+    # register methods for faster evaluation
+    f_readline = file.readline
+    column_append = column.append
+    # read each line until *eof
+    while line:
+        line = f_readline().split()
+        if line[0] == "*eof":
+            break
+        column_append(line)
+    return column
+
+
+def read_network(file, firstheader):
+    """read a network"""
+    network_n = int(firstheader[0][1:3]) # get network number from the first header (e.g. 01 from n01c001)
+    print("loading network no.", network_n)
+    network = list()
+    line = firstheader
+    # register methods for faster evaluation
+    network_append = network.append
+    # read each line until next header
+    while line:
+        col = read_column(file, line)
+        network.append(col)
+        line = file.readline().split()
+        # break at the end of agps file
+        if not line:
+            break
+        # break when reaching the header for the next network (e.g. n02c001)
+        if not int(line[0][1:3]) == network_n:
+            break
+    network = np.array(network, dtype=float)
+    return network, line
+
+
+def read_agps(inputfile="agps"):
+    # read the agps file and return a list of arrays containing data for each network
+    with open(inputfile, "r") as f:
+        # skip the header of the agps file
+        for _ in range(6):
+            line = f.readline()
+        line = f.readline().split()
+        f.readline() # skip the header of first network ("icol, x, y, z, cp1, cp2, cp3, cp4")
+        dat = []
+        while line:
+            net, line = read_network(f, line)
+            dat.append(net)
+    return dat
+
+
+def write_vtk(n_wake=0, outputname="agps", inputfile="agps"):
     """Write agps in the legacy paraview format (vtk)
     All networks will be merged into one block
     Therefore, user are advised to omit 'wakes' by specifying the 'n_wakes'"""
-    data, n_wake = _read_agps_specify_nwake(n_wake) # read agps file & specify the number of networks to omit
+    data = read_agps(inputfile) # read agps file & specify the number of networks to omit
     print("n_wake = ", n_wake)
     # write the header of the vtk file
     vtk = "# vtk DataFile Version 2.0\n"
@@ -56,11 +108,11 @@ def write_vtk(n_wake=None, outputname="agps"):
         f.write(vtk)
 
 
-def write_vtm(n_wake=None, outputname="agps"):
+def write_vtm(n_wake=0, outputname="agps", inputfile="agps"):
     """convert agps networks to paraview unstructured grid
     each network will become a different vtu file
     to open all vtu files at the same time, open the vtm file with paraview"""
-    data, n_wake = _read_agps_specify_nwake(n_wake) # read agps file & specify the number of networks to omit
+    data = read_agps(inputfile) # read agps file & specify the number of networks to omit
     print("n_wake = ", n_wake)
     # write header of vtm file
     vtm = "<?xml version=\"1.0\"?>\n"
@@ -146,9 +198,9 @@ def write_vtm(n_wake=None, outputname="agps"):
         f.write(vtm)
 
 
-def write_tec(n_wake=None, outputname="agps"):
+def write_tec(n_wake=0, outputname="agps", inputfile="agps"):
     """convert agps networks to tecplot finite element quadrilaterals"""
-    data, n_wake = _read_agps_specify_nwake(n_wake) # read agps file & specify the number of networks to omit
+    data = read_agps(inputfile) # read agps file & specify the number of networks to omit
     print("n_wake = ", n_wake)
     # write header
     n_headers = data[0].shape[2] # number of headers (e.g. 8 for "irow, x, y, z, cp1, cp2, cp3, cp4")
@@ -189,16 +241,3 @@ def write_tec(n_wake=None, outputname="agps"):
         tec += quads
     with open("{}.dat".format(outputname), "w") as f:
         f.write(tec)
-
-
-def _read_agps_specify_nwake(n_wake = None):
-    # the last "n_wake" networks will be omitted from the output file (e.g. if there are two wakes enter 2)
-    if n_wake is None:
-        args = sys.argv
-        if len(args) >= 2:
-            n_wake = int(args[1])
-        else:
-            print("enter the number of wakes")
-            n_wake = int(input())
-    dat = read_agps()
-    return dat, n_wake
