@@ -1,9 +1,4 @@
-# add pyPANAIR to python path
-from pathlib import Path
-import sys
-sys.path.append(str(Path.cwd().parent.parent))
-
-from postprocess import agps_converter
+from pyPanair.postprocess import agps_converter
 
 if __name__ == '__main__':
     # test conversion to vtk, vtm, and dat
