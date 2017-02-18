@@ -8,7 +8,7 @@ Currently, post processors for agps files (agps_converter) and ffmf files (ffmf_
 
 List of things that will be implemented **soon<sup>TM</sup>**  
 * Preprocessor for a simple wing geometry
-* Preprocessor for wing & body geometry
+* Preprocessor for a wing & body geometry
 * Postprocessor for calculating the spanwise local lift distribution
 
 ## Installation

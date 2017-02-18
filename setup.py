@@ -1,6 +1,4 @@
 #! /usr/bin/env python
-
-
 DESCRIPTION = 'pyPanair: A pre / post processor for PANAIR'
 DISTNAME = 'pyPanair'
 MAINTAINER = 'STakanashi'
