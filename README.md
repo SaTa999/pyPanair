@@ -1,7 +1,7 @@
 # pyPanair
-A pre / post processor for PANAIR.  
-"a502" (PANAIR), "panin", and "makewgs" are not included in this repo.  
-A copy of each of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
+A pre / post processor for Panair.  
+"Panair" and "Panin" are not included in this repository.  
+A copy of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
 
 ## What can "pyPanair" do?  
 Currently, post processors for agps files (agps_converter, section_force) and ffmf files (ffmf_converter) are implemented.  
@@ -9,6 +9,7 @@ Currently, post processors for agps files (agps_converter, section_force) and ff
 List of things that will be implemented **soon<sup>TM</sup>**  
 * Preprocessor for a simple wing geometry
 * Preprocessor for a wing & body geometry
+* Preprocessor for converting LaWGS files to stl  format
 
 ## Installation
 Download the repository and type
@@ -17,7 +18,7 @@ Download the repository and type
 python setup.py install
 ```
 
-or if you have git installed, type
+or if you have git installed, simply type
 
 ```commandline
 pip install git+https://github.com/SaTa999/pyPanair
