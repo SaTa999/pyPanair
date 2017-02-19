@@ -8,7 +8,7 @@ def inputloop(message, outtype):
             inp = outtype(input())
             return inp
         except ValueError:
-            pass
+            print("invalid input, try again")
 
 
 if __name__ == '__main__':
@@ -21,6 +21,8 @@ if __name__ == '__main__':
         out_format = inputloop("enter 1, 2, or 3: ", int)
         if 1 <= out_format <= 3:
             break
+        else:
+            print("invalid input, try again")
     print("==============================================")
     print("specify the number of wakes")
     print("the last \"n_wakes\" networks in the agps file  will not be included in the output file")
@@ -28,6 +30,8 @@ if __name__ == '__main__':
         n_wakes = inputloop("enter a number: ", int)
         if n_wakes >= 0:
             break
+        else:
+            print("invalid input, try again")
     print("==============================================")
     switch_dict = {1: agps_converter.write_vtk, 2: agps_converter.write_vtm, 3: agps_converter.write_tec}
     switch_dict[out_format](n_wakes)

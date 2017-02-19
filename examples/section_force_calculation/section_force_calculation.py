@@ -8,7 +8,7 @@ def inputloop(message, outtype):
             inp = outtype(input())
             return inp
         except ValueError:
-            pass
+            print("invalid input, try again")
 
 
 if __name__ == '__main__':
