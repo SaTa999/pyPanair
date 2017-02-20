@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 from functools import partial
-import numpy as np
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, proj3d
 from matplotlib.patches import FancyArrowPatch
+import numpy as np
+import pandas as pd
+
 from pyPanair.utilities import cosspace, naca4digit, bspline
 
 
@@ -131,7 +134,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
     lawgs = LaWGS(wgsname)
     with open(filename, "r") as f:
         f.readline() # skip first line
-        net_id = -1
+        net_id = 0
         while True:
             net_id += 1
             netname = f.readline().split() # parse the name of the network
@@ -153,7 +156,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
             network = np.array(coords, dtype=float).reshape((n_line, n_pnt, 3))
             # set boundary conditions if they are given
             if boun_cond:
-                boun = boun_cond[net_id]
+                boun = boun_cond[net_id-1]
             else:
                 boun = 1
             lawgs.append_network(netname, network, boun)
@@ -346,6 +349,43 @@ class Line(np.ndarray):
         return Line((rz @ shift_line.T).T + center)
 
 
+def read_airfoil(filename, chord=1., span_pos=0.):
+    """ read the coordinates of a airfoil from a csv file and create Line from it
+    see the example "naca2412.csv" in the examples directory
+    upper and lower surfaces must have the same number of points
+    first and last points of the upper and lower surfaces must coincide
+    :param filename: name of the csv file
+    :param chord: the "Line" representation of the airfoil wil have a chord length of "chord"
+    """
+    afoil = pd.read_csv(filename)
+    # assert that the upper and lower surfaces have the same number of points
+    if np.unique(afoil.count()).size >= 2:
+        raise ValueError("upper and lower surfaces must have the same number of points")
+    # assert that the first and last points of the upper and lower surfaces coincide
+    if not np.array_equal(afoil.head(1)[["xup/c", "zup/c"]], afoil.head(1)[["xlow/c", "zlow/c"]]):
+        raise ValueError("first points of the upper and lower surfaces must coincide")
+    if not np.array_equal(afoil.tail(1)[["xup/c", "zup/c"]], afoil.tail(1)[["xlow/c", "zlow/c"]]):
+        raise ValueError("last points of the upper and lower surfaces must coincide")
+    # rescale the airfoil chord
+    up_chord = afoil["xup/c"].max() - afoil["xup/c"].min()
+    low_chord = afoil["xlow/c"].max() - afoil["xlow/c"].min()
+    afoil_chord = max(up_chord, low_chord)
+    afoil *= chord / afoil_chord
+    # convert the airfoil csv into a Line
+    xup = np.flipud(afoil["xup/c"])
+    zup = np.flipud(afoil["zup/c"])
+    xlow = afoil["xlow/c"].values
+    zlow = afoil["zlow/c"].values
+    n_pnts = xup.shape[0]
+    afoil_Line = np.ones((n_pnts*2-1,3))
+    afoil_Line *= span_pos
+    afoil_Line[:n_pnts, 0] = xup
+    afoil_Line[:n_pnts, 2] = zup
+    afoil_Line[n_pnts:, 0] = xlow[1:]
+    afoil_Line[n_pnts:, 2] = zlow[1:]
+    return Line(afoil_Line)
+
+
 class Point(np.ndarray):
     """
     Lineを構成するPointのクラス
@@ -412,289 +452,3 @@ class Arrow3D(FancyArrowPatch):
         xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
-
-def main(xfin=20., yfin=192., zfin=0.5, delta=0., span_fin=50., rchord_fin=80., taper=1., sweep=0.):
-    include_fins = True  # 垂直フィンを含める場合True（Falseの場合はクリーン形態）
-
-    wgs_aux = LaWGS("model3")
-    # 主翼のwgsを記述する
-    # <editor-fold desc="main_wing">
-    np_wing_x = 35
-    np_wing_y = 35
-    np_wing_z = 4
-
-    chord_wing = 80.
-    halfspan_wing = 202.
-    naca2410u = partial(naca4digit, 2, 4, 10, surface = 'upper')
-    naca2410l = partial(naca4digit, 2, 4, 10, surface = 'lower')
-    X = cosspace(chord_wing, 0.0, np_wing_x)
-    shift = np.array([0., 22., 3.85])
-
-    gridu = [naca2410u(x, chord_wing) for x in X]
-    gridl = [naca2410l(x, chord_wing) for x in X]
-    gridl.reverse()
-    wingrootu = Line([[gr[0], 0., gr[1]] for gr in gridu])
-    wingrootu = wingrootu + shift
-    wingtipu = wingrootu.shifted_line(y=halfspan_wing)
-    wingu = wingrootu.linspace(wingtipu, np_wing_y)
-    wingrootl = Line([[gr[0], 0., gr[1]] for gr in gridl])
-    wingrootl = wingrootl + shift
-    wingtipl = wingrootl.shifted_line(y=halfspan_wing)
-    wingl = wingrootl.linspace(wingtipl, np_wing_y)
-    wing = wingu.concat_column(wingl)
-    wgs_aux.append_network("wing", wing, 1)
-
-    wingtip = wingtipu.linspace(wingtipl.flip(), np_wing_z)
-    wgs_aux.append_network("wingtip", wingtip, 1)
-    # </editor-fold>
-
-    # 舵翼のwgsを記述する
-    # <editor-fold desc="fins">
-    if include_fins:
-        # rchord_fin = 80.
-        # span_fin = 50.
-        # taper = 1.
-        # delta = 0
-        # xfin = 0.
-        # yfin = 130.
-        tchord_fin = rchord_fin * taper
-
-        np_fin_x = 30#int(rchord_fin // 3)
-        np_fin_y = 4
-        np_fin_z = 25#int(span_fin // 3)
-
-        shift = Point([xfin-0.25*rchord_fin, yfin, 3.85 + 5.54 + zfin])
-        center = Point([rchord_fin * 0.25, 0., 0.])
-        rtshift = Point([(rchord_fin - tchord_fin) * 0.25+span_fin*np.sin(np.radians(sweep)), 0., 0.])
-        finfoilu = partial(naca4digit, 0, 0, 10, surface='upper')
-        finfoill = partial(naca4digit, 0, 0, 10, surface='lower')
-        rootX = cosspace(rchord_fin, 0.0, np_fin_x)
-        tipX = cosspace(tchord_fin, 0.0, np_fin_x)
-
-        grid1 = [finfoill(x, rchord_fin) for x in rootX]
-        grid2 = [finfoill(x, tchord_fin) for x in tipX]
-        fini1 = Line([[gr[0], gr[1], 0.] for gr in grid1])
-        fini2 = Line([[gr[0], gr[1], span_fin] for gr in grid2]) + rtshift
-        fini = fini1.linspace(fini2, np_fin_z)
-        fini = fini.rotz(center, delta)
-        fini = fini.shift(shift)
-        wgs_aux.append_network("fininner", fini, 1)
-
-        grid1 = [finfoilu(x, rchord_fin) for x in rootX]
-        grid2 = [finfoilu(x, tchord_fin) for x in tipX]
-        fino1 = Line([[gr[0], gr[1], 0.] for gr in grid1])
-        fino2 = Line([[gr[0], gr[1], span_fin] for gr in grid2]) + rtshift
-        fino = fino1.linspace(fino2, np_fin_z)
-        fino = Network(np.fliplr(fino))
-        fino = fino.rotz(center, delta)
-        fino = fino.shift(shift)
-        wgs_aux.append_network("finouter", fino, 1)
-
-        fintop1 = fini.edge(2)
-        fintop2 = fino.edge(2)
-        fintop1 = fintop1.flip()
-        fintop = fintop2.linspace(fintop1, np_fin_y)
-        wgs_aux.append_network("fintiptop", fintop, 1)
-
-        finbot1 = fini.edge(4)
-        finbot2 = fino.edge(4)
-        finbot1 = finbot1.flip()
-        finbot = finbot1.linspace(finbot2, np_fin_y)
-        wgs_aux.append_network("fintipbottom", finbot, 1)
-    # </editor-fold>
-
-    # 胴体中央部のwgsを記述する
-    # <editor-fold desc="body">
-    np_body_y = 5
-    np_body_z1 = 5
-    np_body_z2 = 3
-
-    body_z1 = 0.
-    body_z2 = 55.
-    body_y1 = 0.
-
-    body1 = wingu.edge(4).flip()
-    body2 = body1.shifted_line(z=body_z2)
-    body3 = body2.shifted_line(y=body_y1)
-    bodysideupper = body1.cosspace(body2, np_body_z1)
-    bodytop = body2.cosspace(body3, np_body_y)
-    bodyupper = bodysideupper.concat_row(bodytop)
-    wgs_aux.append_network("bodyupper", bodyupper, 1)
-
-    body6 = wingl.edge(4)
-    body5 = body6.shifted_line(z=body_z1)
-    body4 = body5.shifted_line(y=body_y1)
-    bodybot = body4.cosspace(body5, np_body_y)
-    bodysidelower = body5.cosspace(body6, np_body_z2)
-    bodylower = bodybot.concat_row(bodysidelower)
-    wgs_aux.append_network("bodylower", bodylower, 1)
-    # </editor-fold>
-
-    # noseのwgsを記述する
-    # <editor-fold desc="nose">
-    np_nose_x1 = 15
-    np_nose_x2 = 5
-    np_nose_y = 5
-    np_nose_z1 = 3
-    np_nose_z2 = 5
-
-    nose_x1 = -77.
-    nose_x2 = 0.
-    nose_y1 = 0.
-    nose_y2 = nose_y1 + 12.5
-    nose_y3 = 22.
-    nose_z1 = 0.
-    nose_z2 = nose_z1 + 3.85
-    nose_z3 = nose_z1 + 13.
-    nose_z5 = nose_z3 + 25.
-    nose_z6 = 55.
-    nose_z4 = nose_z3 + (nose_z2 - nose_z1) / (nose_z6 - nose_z1) * (nose_z5 - nose_z3)
-
-    cp2 = np.array([[-77.000, 0.000, 25.500],
-                    [-77.000, 7.894, 17.606],
-                    [-67.570, 13.663, 11.408],
-                    [-57.000, 14.968, 9.623]])
-    cp4 = np.array([[-77.000, 0.000, 25.500],
-                    [-77.000, 8.009, 33.509],
-                    [-67.617, 13.658, 40.072],
-                    [-57.000, 14.968, 42.416]])
-    spl2 = bspline(cp2)
-    spl4 = bspline(cp4)
-    tcks = cosspace(0, 1, np_nose_x1)
-    nose21 = Line(spl2(tcks))
-    nose41 = Line(spl4(tcks))
-    p2 = Point((nose_x2, nose_y3, nose_z1))
-    p4 = p2.shifted_point(z=nose_z6)
-    nose22 = Point(nose21[-1]).cosspace(p2, np_nose_x2)
-    nose42 = Point(nose41[-1]).cosspace(p4, np_nose_x2)
-    nose2 = nose21.concat(nose22)
-    nose4 = nose41.concat(nose42)
-
-    nose1 = nose2.shifted_line(y=nose_y1)
-    nose5 = nose4.shifted_line(y=nose_y1)
-    nose3 = Line((nose2 * (nose_z6 - nose_z2) + nose4 * nose_z2) / nose_z6)
-
-    nosebot = nose1.cosspace(nose2, np_nose_y)
-    noselow = nose2.cosspace(nose3, np_nose_z1)
-    noseup = nose3.cosspace(nose4, np_nose_z2)
-    nosetop = nose4.cosspace(nose5, np_nose_y)
-    nose = nosebot.concat_row((noselow, noseup, nosetop))
-    wgs_aux.append_network("nose", nose, 1)
-    # </editor-fold>
-
-    # 胴体後方部のwgsを記述する
-    # <editor-fold desc="tail">
-    np_tail_x1 = 4
-    np_tail_x2 = 9
-    np_tail_y = 5
-    np_tail_z1 = 5
-    np_tail_z2 = 3
-    tail_x1 = 0.
-    tail_x2 = tail_x1 + 6.
-    tail_x3 = tail_x2 + 216.
-    tail_y1 = 0.
-    tail_y2 = tail_y1 + 3.
-    tail_y4 = tail_y1 + 22.
-    tail_y3 = tail_y4 - 0.1
-    tail_z1 = 0.
-    tail_z2 = 3.85
-    tail_z3 = tail_z1 + 40.
-    tail_z5 = tail_z1 + 55.
-    tail_z4 = tail_z3 + (tail_z2 - tail_z1) / (tail_z5 - tail_z1) * (tail_z5 - tail_z3)
-    shift = np.array([80., 0., 0.])
-
-    p1 = Point([tail_x1, tail_y1, tail_z1])
-    p2 = p1.shifted_point(y=tail_y4)
-    p3 = p2.shifted_point(z=tail_z2)
-    p4 = p3.shifted_point(z=tail_z5)
-    p5 = p4.shifted_point(y=tail_y1)
-    p6 = p5.shifted_point(x=tail_x2)
-    p7 = p6.shifted_point(y=tail_y3)
-    p8 = p7.shifted_point(z=tail_z2)
-    p9 = p8.shifted_point(z=tail_z1)
-    p10 = p9.shifted_point(y=tail_y1)
-    tail1bot = p1.square_network(p2, p9, p10, np_tail_x1, np_tail_y, "cos", "cos")
-    tail1low = p2.square_network(p3, p8, p9, np_tail_x1, np_tail_z1, "cos", "cos")
-    tail1up = p3.square_network(p4, p7, p8, np_tail_x1, np_tail_z2, "cos", "cos")
-    tail1top = p4.square_network(p5, p6, p7, np_tail_x1, np_tail_y, "cos", "cos")
-
-    tail1lower = tail1bot.concat_row(tail1low)
-    tail1upper = tail1up.concat_row(tail1top)
-
-    p1 = p10
-    p2 = p9
-    p3 = p8
-    p4 = p7
-    p5 = p6
-    p6 = Point([tail_x3, tail_y1, tail_z5])
-    p7 = p6.shifted_point(y=tail_y2)
-    p8 = p7.shifted_point(z=tail_z4)
-    p9 = p8.shifted_point(z=tail_z3)
-    p10 = p9.shifted_point(y=tail_y1)
-    tail2bot = p1.square_network(p2, p9, p10, np_tail_x1, np_tail_y, "cos", "cos")
-    tail2low = p2.square_network(p3, p8, p9, np_tail_x1, np_tail_z1, "cos", "cos")
-    tail2up = p3.square_network(p4, p7, p8, np_tail_x1, np_tail_z2, "cos", "cos")
-    tail2top = p4.square_network(p5, p6, p7, np_tail_x1, np_tail_y, "cos", "cos")
-
-    tail2lower = tail2bot.concat_row(tail2low)
-    tail2upper = tail2up.concat_row(tail2top)
-
-    tailupper = tail1upper.concat_column(tail2upper)
-    tailupper = tailupper.shift(shift)
-    taillower = tail1lower.concat_column(tail2lower)
-    taillower = taillower.shift(shift)
-
-    wgs_aux.append_network("tailupper", tailupper, 1)
-    wgs_aux.append_network("taillower", taillower, 1)
-
-    tailbaseu1 = tail2up.edge(3).flip()
-    tailbaseu2 = tailbaseu1.shifted_line(y=tail_y1)
-    tailbaseu = tailbaseu1.cosspace(tailbaseu2, np_tail_y)
-    tailbaseu = tailbaseu.shift(shift)
-    wgs_aux.append_network("tailbaseupper", tailbaseu, 5)
-
-    tailbasel1 = tail2low.edge(3).flip()
-    tailbasel2 = tailbasel1.shifted_line(y=tail_y1)
-    tailbasel = tailbasel1.cosspace(tailbasel2, np_tail_y)
-    tailbasel = tailbasel.shift(shift)
-    wgs_aux.append_network("tailbaselower", tailbasel, 5)
-    # </editor-fold>
-
-    # wakeのwgsを記述する
-    # <editor-fold desc="wake">
-    wake_length = chord_wing * 25.
-
-    wingwake = wing.make_wake(3, wake_length)
-    wgs_aux.append_network("wingwake", wingwake, 18)
-
-    if include_fins:
-        finwake = fini.make_wake(1, wake_length)
-        wgs_aux.append_network("finwake", finwake, 18)
-
-    bodybaseuwake = tailupper.make_wake(3, wake_length)
-    wgs_aux.append_network("bodybaseuwake", bodybaseuwake, 18)
-
-    bodybaselwake = taillower.make_wake(3, wake_length)
-    wgs_aux.append_network("bodybaselwake", bodybaselwake, 18)
-
-    bodywake = tailupper.make_wake(4, wake_length)
-    wgs_aux.append_network("bodywake", bodywake, 20)
-    # </editor-fold>
-
-    wgs_aux.create_wgs()
-
-    #alpha = np.arange(-6, 18, 2)
-    #alpha = list(zip(*[iter(alpha)] * 3))
-    alpha = (2,)
-    for (i, a) in enumerate(alpha):
-        wgs_aux.create_aux("model3_{}.aux".format(i + 1), alpha=a, mach=0.0587, cbar=80, span=404, sref=32320,
-                           xref=33, zref=30)
-
-    wgs_aux.create_stl("model3.stl")
-
-    delta1 = read_wgs("delta1.wgs")
-    delta1.create_stl("delta1.stl")
-
-
-if __name__ == '__main__':
-    main()
