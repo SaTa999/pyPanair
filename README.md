@@ -1,5 +1,5 @@
 # pyPanair
-A pre / post processor for Panair.  
+A pre/post processor for Panair.  
 "Panair" and "Panin" are not included in this repository.  
 A copy of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
 
