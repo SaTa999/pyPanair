@@ -131,7 +131,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
     lawgs = LaWGS(wgsname)
     with open(filename, "r") as f:
         f.readline() # skip first line
-        net_id = 0
+        net_id = -1
         while True:
             net_id += 1
             netname = f.readline().split() # parse the name of the network
