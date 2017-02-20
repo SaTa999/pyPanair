@@ -1,1 +1,1 @@
- 
+from .wgs_creator import *
