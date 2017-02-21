@@ -7,7 +7,7 @@ from matplotlib.patches import FancyArrowPatch
 import numpy as np
 import pandas as pd
 
-from pyPanair.utilities import cosspace, naca4digit, bspline
+from pyPanair.utilities import naca4digit, bspline
 
 
 class LaWGS:
@@ -321,7 +321,7 @@ class Network(BasicGeom):
     def make_wake(self, edge_number, wake_length):
         """Networkのedgeを始点とするwakeのNetworkを返す"""
         edge = self.edge(edge_number)
-        wake_end = edge.shifted_line(x=wake_length)
+        wake_end = edge.replace(x=wake_length)
         wake = Network((edge, wake_end))
         wake = wake.trans()
         return wake
@@ -348,24 +348,27 @@ class Line(BasicGeom):
         :param stop: the Line "stop" will become the edge of the interpolated Network
         :param num: number of lines in the interpolated network
         """
+        stop = Line(stop)
         if not self.shape == stop.shape:
             raise ValueError("Lines \"self\" and \"stop\" must have the same shape")
-        lin = np.linspace(0., 1., num, **kwargs)
-        return Network(self + (stop - self) * lin[:, np.newaxis, np.newaxis])
+        spacing = np.linspace(0., 1., num, **kwargs)
+        return Network(self + (stop - self) * spacing[:, np.newaxis, np.newaxis])
 
     def cosspace(self, stop, num, **kwargs):
         """ create a Network by interpolating the Lines "self" and "stop" using half-cosine spacing
         :param stop: the Line "stop" will become the edge of the interpolated Network
         :param num: number of lines in the interpolated network
         """
+        stop = Line(stop)
         if not self.shape == stop.shape:
             raise ValueError("Lines \"self\" and \"stop\" must have the same shape")
-        cs = cosspace(0., 1., num, **kwargs)
-        return Network(self + (stop - self) * cs[:, np.newaxis, np.newaxis])
+        spacing = cosspace(0., 1., num, **kwargs)
+        return Network(self + (stop - self) * spacing[:, np.newaxis, np.newaxis])
 
-    def shifted_line(self, x=None, y=None, z=None):
-        """Lineの全Pointを指定の座標を変更した新しいLineを返す"""
-        new_line = [Point(point).shifted_point(x, y, z) for point in self]
+    def replace(self, x=None, y=None, z=None):
+        """ return a Line which has the coordinates of each point replaced by "x", "y", "z"
+            coordinates will not be replaced if the variable is None"""
+        new_line = [Point(point).replace(x, y, z) for point in self]
         return Line(new_line)
 
     def flip(self):
@@ -439,26 +442,34 @@ class Point(BasicGeom):
         return obj.reshape(cls._base_shape)
 
     def linspace(self, stop, num, **kwargs):
-        """自身からstopまでをnum分割したLineを返す（等間隔）"""
-        lin = np.linspace(0., 1., num, **kwargs)
-        return Line(self + (stop - self) * lin[:, np.newaxis])
+        """ create a Line by linearly interpolating the Points "self" and "stop"
+        :param stop: the Point "stop" will become the end of the interpolated Line
+        :param num: number of points in the interpolated line
+        """
+        stop = Point(stop)
+        spacing = np.linspace(0., 1., num, **kwargs)
+        return Line(self + (stop - self) * spacing[:, np.newaxis])
 
     def cosspace(self, stop, num, **kwargs):
-        """自身からstopまでをnum分割したLineを返す（half-cosine spacing）"""
-        cs = cosspace(0., 1., num, **kwargs)
-        return Line(self + (stop - self) * cs[:, np.newaxis])
+        """ create a Line by interpolating the Points "self" and "stop" using half-cosine spacing
+        :param stop: the Point "stop" will become the end of the interpolated Line
+        :param num: number of points in the interpolated line
+        """
+        stop = Point(stop)
+        spacing = cosspace(0., 1., num, **kwargs)
+        return Line(self + (stop - self) * spacing[:, np.newaxis])
 
-    def shifted_point(self, x=None, y=None, z=None):
-        """Pointの指定の座標を変更した新しいPointを返す"""
-        new_point = [self[i] if c is None else c for (i, c) in enumerate((x, y, z))]
+    def replace(self, x=None, y=None, z=None):
+        """ return a point which has coordinates replaced by "x", "y", "z"
+            coordinates will not be replaced if the variable is None"""
+        new_point = [s if c is None else c for (s, c) in zip(self, (x, y, z))]
         return Point(new_point)
 
     def square_network(self, p2, p3, p4, row_num, column_num, row_spacing="linspace", column_spacing="linspace",
                        **kwargs):
-        """自身及びp2～p4をnetwork cornerとするNetworkを生成する
-        edge1,3がcolumnに、edge2,4がrowに対応
-        edge2,4：x軸方向（気流方向）、edge1,3：y軸方向とすれば間違いはないはず
-        z軸は下図で紙面上向き
+        """ create a Network by interpolating the Points self, p2, p3, and p4
+        the columns will become edge 1 and 3
+        the rows will become edge 2 and 4
          p4  edge3  p3
 
         edge4      edge2
@@ -478,6 +489,12 @@ class Point(BasicGeom):
             return line1.cosspace(line2, column_num, **kwargs)
         else:
             raise ValueError("spacing must be linspace or cosspace")
+
+
+def cosspace(start, stop, num, **kwargs):
+    """ half cosine interpolation between "start" and "stop"
+    """
+    return start + (stop - start) * 0.5 * (1 - np.cos(np.linspace(0., np.pi, num, **kwargs)))
 
 
 class Arrow3D(FancyArrowPatch):

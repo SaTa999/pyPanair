@@ -44,12 +44,6 @@ def naca4digit(m, p, xx, x, c, surface):
     return [xu, yu]
 
 
-def cosspace(start, stop, num, **kwargs):
-    """ half cosine interpolation between "start" and "stop"
-    """
-    return start + (stop - start) * 0.5 * (1 - np.cos(np.linspace(0., np.pi, num, **kwargs)))
-
-
 def bspline(cv, degree=3, periodic=False):
     """ return a function that defines a bezier spline
         cv :      an array of control points
