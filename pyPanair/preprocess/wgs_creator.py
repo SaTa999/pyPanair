@@ -209,10 +209,8 @@ class BasicGeom(np.ndarray):
 
 
 class Network(BasicGeom):
-    """
-    wgs形式で使用するネットワークのクラス
-    Lineの集合として表す
-    形式はndim=3のnumpy-ndarray
+    """ A class that represents a 3 dimensional network which is composed of Lines
+    coordinate data is stored in a numpy.ndarray with a shape of (n_lines, n_points, 3)
     """
     _base_shape = (1,1,3)
 
@@ -229,7 +227,8 @@ class Network(BasicGeom):
         return obj
 
     def edge(self, edge_number):
-        """NetworkのedgeをLineとして返す"""
+        """return the edge of the Network as a Line
+        use the plot_wireframe method to check which edge_number corresponds to which edge"""
         edge_number = int(edge_number)
         if edge_number == 1:
             return Line(self[:, 0, :])
@@ -247,7 +246,8 @@ class Network(BasicGeom):
                           for point in line)) for line in self)) + "\n"
 
     def concat_row(self, networks):
-        """Networkのedge2,4同士を繋げたNetworkを返す"""
+        """ join edge2 and edge4 of self and input networks
+        :param networks: a single Network or a tuple of Networks"""
         if type(networks) is Network:
             networks = (self, networks[1:])
         else:
@@ -259,7 +259,8 @@ class Network(BasicGeom):
         return Network(np.concatenate(networks))
 
     def concat_column(self, networks):
-        """Networkのedge1,3同士を繋げたNetworkを返す"""
+        """ join edge1 and edge3 of self and input networks
+        :param networks: a single Network or a tuple of Networks"""
         if type(networks) is Network:
             networks = (self, networks[:, 1:])
         else:
@@ -271,13 +272,17 @@ class Network(BasicGeom):
         return Network(np.concatenate(networks, axis=1))
 
     def plot_wireframe(self, show_corners=True, show_edges=True, show_normvec=True):
-        """Networkをワイヤーフレームとして表示する"""
+        """ plot the Network as a wireframe
+        :param show_corners: display the corner numbers of the Network
+        :param show_edges: display the edge numbers of the Network
+        :param show_normvec: show a vector pointing out from the front side of the Network
+                            (will not work for skewed Networks and Networks consisting only a pair of Lines)"""
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_aspect("equal")
         X, Y, Z = (self[:, :, i] for i in range(3))
         ax.plot_wireframe(X, Y, Z)
-        # 各方向のアスペクト比を同じにするため隅に透明なマーカーを置く
+        # place invisible markers to set the aspect ratio of each axis to be equal
         max_range = np.array([X.max() - X.min(), Y.max() - Y.min(), Z.max() - Z.min()]).max()
         Xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].ravel() + 0.5 * (X.max() + X.min())
         Yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].ravel() + 0.5 * (Y.max() + Y.min())
@@ -298,7 +303,6 @@ class Network(BasicGeom):
             ax.text(*self[-1, colmid, :], s="edge2")
             ax.text(*self[rowmid, -1, :], s="edge3")
             ax.text(*self[0, colmid, :], s="edge4")
-
         if show_normvec:
             v_edge4 = self[rowmid, colmid, :] - self[rowmid, colmid - 1, :]
             v_edge1 = self[rowmid, colmid, :] - self[rowmid - 1, colmid, :]
@@ -309,19 +313,21 @@ class Network(BasicGeom):
             ax.add_artist(a)
         plt.show()
 
-    def trans(self):
-        """Networkの行と列を入れ替える"""
+    def transpose(self):
+        """transpose the row (axis0) and column(axis1) of the Network"""
         return self.transpose((1, 0, 2))
 
     def _rotate(self, rotmat, rotcenter):
         return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
 
     def make_wake(self, edge_number, wake_length):
-        """Networkのedgeを始点とするwakeのNetworkを返す"""
+        """return a wake Network that starts from a edge of the Network
+        :param edge_number: the edge number that the wake starts from
+        :param wake_length: the length of the wake"""
         edge = self.edge(edge_number)
         wake_end = edge.replace(x=wake_length)
         wake = Network((edge, wake_end))
-        wake = wake.trans()
+        wake = wake.transpose()
         return wake
 
 
@@ -370,11 +376,11 @@ class Line(BasicGeom):
         return Line(new_line)
 
     def flip(self):
-        """向きを反転したLineを返す"""
+        """ return a Line with the order of points flipped from the original"""
         return np.flipud(self)
 
     def concat(self, lines):
-        """Lineを繋げたLineを返す"""
+        """concatenate two or more Lines"""
         if type(lines) is Line:
             lines = (self, lines[1:])
         else:
