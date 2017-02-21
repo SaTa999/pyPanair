@@ -4,12 +4,16 @@ A pre/post processor for Panair.
 A copy of these software can be obtained at [Public Domain Aeronautical Software](http://www.pdas.com/contents15.html).  
 
 ## What can "pyPanair" do?  
-Currently, post processors for agps files (agps_converter, section_force) and ffmf files (ffmf_converter) are implemented.  
+List of things that are currently implemented in pyPanair (check the examples)
+* Preprocessor that converts LaWGS format files to stl format (convert_wgs)  
+* Postprocessor that converts agps format files to vtk (Legacy Paraview), vtm (Multiblock Paraview),
+ and dat (multiblock Tecplot) format (convert agps)  
+* Postprocessor that calculates the section force (local lift coefficient) from agps files (section_force_calculation)
+* Postprocessor that converts ffmf files to csv format (convert_ffmf)  
 
 List of things that will be implemented **soon<sup>TM</sup>**  
 * Preprocessor for a simple wing geometry
 * Preprocessor for a wing & body geometry
-* Preprocessor for converting LaWGS files to stl  format
 
 ## Installation
 Download the repository and type
