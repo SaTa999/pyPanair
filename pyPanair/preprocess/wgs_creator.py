@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-from functools import partial
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, proj3d
 from matplotlib.patches import FancyArrowPatch
 import numpy as np
 import pandas as pd
 
-from pyPanair.utilities import naca4digit, bspline
+from pyPanair.utilities import bspline
 
 
 class LaWGS:
@@ -426,6 +424,52 @@ def read_airfoil(filename, chord=1., span_pos=0.):
     afoil_Line[:n_pnts, 2] = zup
     afoil_Line[n_pnts:, 0] = xlow[1:]
     afoil_Line[n_pnts:, 2] = zlow[1:]
+    return Line(afoil_Line)
+
+
+def naca4digit(digits, num = 25, chord=1., span_pos=0.):
+    """ create a Line of a naca 4 digit airfoil
+    :param digits: the 4 digits that specify the airfoil (e.g. 2412)
+    """
+    digits = str(digits)
+    if len(digits) != 4:
+        raise ValueError("enter 4 digits (e.g. 2412)")
+    m = float(digits[0]) / 100.
+    p = float(digits[1]) / 10.
+    t = float(digits[2:]) / 100.0
+    a0 = 0.2969
+    a1 = -0.126
+    a2 = -0.3516
+    a3 = 0.2843
+    a4 = -0.1036  # originally -0.1015, but -0.1036 for sharp edge
+    x = cosspace(0, 1, num)
+    zt = 5 * t * (a0 * (x ** 0.5) + a1 * x + a2 * (x ** 2) + a3 * (x ** 3) + a4 * (x ** 4)) # thickness
+    def camber_gradient(xi, p):
+        if 0 <= xi < p:
+            zc = (m / (p ** 2)) * (2 * p * xi - xi ** 2)  # camber
+            grad_zc = (2 * m / (p ** 2)) * (p - xi)  # gradient
+        else:
+            zc = (m / ((1 - p) ** 2)) * (1 - 2 * p + 2 * p * xi - xi ** 2)  # camber
+            grad_zc = (2 * m / ((1 - p) ** 2)) * (p - xi)  # gradient
+        return zc, grad_zc
+    vfunc = np.vectorize(camber_gradient)
+    zc, grad_zc = vfunc(x, p)
+    theta = np.arctan(grad_zc)
+    xup = chord * (x - zt * np.sin(theta))
+    zup = chord * (zc + zt * np.cos(theta))
+    xup = np.flipud(xup)
+    zup = np.flipud(zup)
+    xlow = chord * (x + zt * np.sin(theta))
+    zlow = chord * (zc - zt * np.cos(theta))
+    # modify the zup & zlow to make the thickness 0 at the TE
+    zup[0] = 0.
+    zlow[-1] = 0.
+    afoil_Line = np.ones((num*2-1,3))
+    afoil_Line *= span_pos
+    afoil_Line[:num, 0] = xup
+    afoil_Line[:num, 2] = zup
+    afoil_Line[num:, 0] = xlow[1:]
+    afoil_Line[num:, 2] = zlow[1:]
     return Line(afoil_Line)
 
 
