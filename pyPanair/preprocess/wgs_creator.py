@@ -170,12 +170,12 @@ class BasicGeom(np.ndarray):
         :param inplace: a new object will be created unless inplace=True"""
         distance = np.asarray(distance).reshape(self._base_shape)
         if inplace:
-            self += distance
+            self[:] += distance
             return self
         else:
             return self + distance
 
-    def _rotation(self, rotmat, rotcenter):
+    def _rotate(self, rotmat, rotcenter):
         raise NotImplementedError
 
     def _rotxyz(self, axis, rotcenter, angle, degrees):
@@ -196,7 +196,7 @@ class BasicGeom(np.ndarray):
                                [0, 0, 1]])
         else:
             raise ValueError("axis must be x, y, or z")
-        return self._rotation(rotmat, rotcenter)
+        return self._rotate(rotmat, rotcenter)
 
     def rotx(self, rotcenter, angle, degrees=True):
         return self._rotxyz("x", rotcenter, angle, degrees)
@@ -231,13 +231,13 @@ class Network(BasicGeom):
     def edge(self, edge_number):
         """NetworkのedgeをLineとして返す"""
         edge_number = int(edge_number)
-        if edge_number is 1:
+        if edge_number == 1:
             return Line(self[:, 0, :])
-        elif edge_number is 2:
+        elif edge_number == 2:
             return Line(self[-1])
-        elif edge_number is 3:
+        elif edge_number == 3:
             return Line(self[:, -1, :])
-        elif edge_number is 4:
+        elif edge_number == 4:
             return Line(self[0])
         else:
             raise ValueError("edge_number must be 1, 2, 3 or 4")
@@ -313,7 +313,7 @@ class Network(BasicGeom):
         """Networkの行と列を入れ替える"""
         return self.transpose((1, 0, 2))
 
-    def _rotation(self, rotmat, rotcenter):
+    def _rotate(self, rotmat, rotcenter):
         return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
 
     def make_wake(self, edge_number, wake_length):
@@ -385,10 +385,16 @@ class Line(BasicGeom):
                 raise ValueError("only Lines can be concatenated")
         return Line(np.concatenate(lines))
 
-    def _rotation(self, rotmat, rotcenter):
+    def _rotate(self, rotmat, rotcenter):
         shift_line = Line(self - rotcenter)
         return Line((rotmat @ shift_line.T).T + rotcenter)
 
+    def split_half(self):
+        """ split the Line into two halves and return copies of the halves
+        useful when splitting an airfoil into upper and lower Lines"""
+        first_half = Line(np.array(self[:self.shape[0]//2+1]))
+        second_half = Line(np.array(self[self.shape[0]//2:]))
+        return first_half, second_half
 
 def read_airfoil(filename, chord=1., span_pos=0.):
     """ read the coordinates of a airfoil from a csv file and create Line from it
