@@ -328,34 +328,38 @@ class Network(BasicGeom):
 
 
 class Line(BasicGeom):
-    """
-    Networkを構成するLineのクラス
-    Pointの集合として表す
-    形式はndim=2のnumpy-ndarray
+    """ A class that represents a 3 dimensional line which is composed of Points
+    coordinate data is stored in a numpy.ndarray with a shape of (n_points, 3)
     """
     _base_shape = (1,3)
 
     def __new__(cls, input_line):
         obj = np.asarray(input_line, dtype=float).view(cls)
-        if obj.ndim is not 2:
+        if obj.ndim != 2:
             raise ValueError("Line must be 2d array")
-        if int(obj.shape[0]) is 1:
+        if obj.shape[0] == 1:
             raise ValueError("Line must be composed of at least 2 points")
-        if int(obj.shape[1]) is not 3:
+        if obj.shape[1] != 3:
             raise ValueError("Line must be composed of 3 dimensional points")
         return obj
 
     def linspace(self, stop, num, **kwargs):
-        """自身からstopまでをnum分割したLineを返す（等間隔）"""
-        if not self.shape[0] == stop.shape[0]:
-            raise ValueError("length of lines are unequal")
+        """ create a Network by linearly interpolating the Lines "self" and "stop"
+        :param stop: the Line "stop" will become the edge of the interpolated Network
+        :param num: number of lines in the interpolated network
+        """
+        if not self.shape == stop.shape:
+            raise ValueError("Lines \"self\" and \"stop\" must have the same shape")
         lin = np.linspace(0., 1., num, **kwargs)
         return Network(self + (stop - self) * lin[:, np.newaxis, np.newaxis])
 
     def cosspace(self, stop, num, **kwargs):
-        """自身からstopまでをnum分割したLineを返す（half-cosine spacing）"""
-        if not self.shape[0] == stop.shape[0]:
-            raise ValueError("length of lines are unequal")
+        """ create a Network by interpolating the Lines "self" and "stop" using half-cosine spacing
+        :param stop: the Line "stop" will become the edge of the interpolated Network
+        :param num: number of lines in the interpolated network
+        """
+        if not self.shape == stop.shape:
+            raise ValueError("Lines \"self\" and \"stop\" must have the same shape")
         cs = cosspace(0., 1., num, **kwargs)
         return Network(self + (stop - self) * cs[:, np.newaxis, np.newaxis])
 
@@ -423,19 +427,16 @@ def read_airfoil(filename, chord=1., span_pos=0.):
 
 
 class Point(BasicGeom):
-    """
-    Lineを構成するPointのクラス
-    中身はnumpyのndarray
+    """ A class that represents a 3 dimensional point
+    coordinate data is stored in a numpy.ndarray with a shape of (3,)
     """
     _base_shape = (3,)
 
     def __new__(cls, input_point):
         obj = np.asarray(input_point, dtype=float).view(cls)
-        if obj.ndim != 1:
-            raise ValueError("Point must be 1d array")
-        if int(obj.shape[0]) != 3:
+        if obj.size != 3:
             raise ValueError("Point must be 3 dimensional")
-        return obj
+        return obj.reshape(cls._base_shape)
 
     def linspace(self, stop, num, **kwargs):
         """自身からstopまでをnum分割したLineを返す（等間隔）"""
@@ -472,14 +473,15 @@ class Point(BasicGeom):
         else:
             raise ValueError("row_spacing must be linspace or cosspace")
         if column_spacing in ("linspace", "lin"):
-            return line1.linspace(line2, column_num)
+            return line1.linspace(line2, column_num, **kwargs)
         elif column_spacing in ("cosspace", "cos"):
-            return line1.cosspace(line2, column_num)
+            return line1.cosspace(line2, column_num, **kwargs)
         else:
             raise ValueError("spacing must be linspace or cosspace")
 
 
 class Arrow3D(FancyArrowPatch):
+    """a class for drawing a 3D arrow"""
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
         self._verts3d = xs, ys, zs
