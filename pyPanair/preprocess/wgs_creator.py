@@ -394,9 +394,9 @@ class Point(np.ndarray):
 
     def __new__(cls, input_point):
         obj = np.asarray(input_point, dtype=float).view(cls)
-        if obj.ndim is not 1:
+        if obj.ndim != 1:
             raise ValueError("Point must be 1d array")
-        if int(obj.shape[0]) is not 3:
+        if int(obj.shape[0]) != 3:
             raise ValueError("Point must be 3 dimensional")
         return obj
 
@@ -440,6 +440,15 @@ class Point(np.ndarray):
             return line1.cosspace(line2, column_num)
         else:
             raise ValueError("spacing must be linspace or cosspace")
+
+
+class BasicGeom(np.ndarray):
+    def __new__(cls, input_point):
+        obj = np.asarray(input_point, dtype=float).view(cls)
+        return obj
+
+    def shift(self):
+
 
 
 class Arrow3D(FancyArrowPatch):

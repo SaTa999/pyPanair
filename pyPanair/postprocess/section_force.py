@@ -49,7 +49,7 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
         min_id = np.argmin(line_clip, axis=0) # vertex_id with the minimum coordinate
         flip = np.array([-1 if col[id] < 0 else 1 for (col, id) in zip(norm.T, min_id)])
         norm *= flip # flip the norm vectors to make them point inward
-        chord = np.max(line_clip[:,0]) - np.min(line_clip[:,0])
+        chord = np.linalg.norm(line_clip[0] - line_clip[line_clip.shape[0]//2])
 
         coeff_all = [y]
         # the definition of each variable is explained in the reference
