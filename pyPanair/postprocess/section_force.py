@@ -65,7 +65,7 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
         cpdl = cp21 * l21[:,np.newaxis] + cp23 * l23[:,np.newaxis]
         cp_moment = cpdl * np.fliplr(line_clip - rot_center)
         cp_moment = cp_moment[:,0] - cp_moment[:,1]
-        liftdragcoef = np.sum(cpdl, axis=0) / mac
+        liftdragcoef = np.sum(cpdl, axis=0) / chord
         liftdragcoef = rot(liftdragcoef, aoa)
         cm = np.sum(cp_moment, axis=0) / (mac * chord)
         coeff = liftdragcoef.tolist()
