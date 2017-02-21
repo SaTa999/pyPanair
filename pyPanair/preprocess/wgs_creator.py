@@ -163,12 +163,60 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
         return lawgs
 
 
-class Network(np.ndarray):
+class BasicGeom(np.ndarray):
+    _base_shape = (3,)
+
+    def shift(self, distance, inplace=False):
+        """shift all the points of a geometry
+        :param distance: the distance that points are shifted (e.g. (1., 2., 0.))
+        :param inplace: a new object will be created unless inplace=True"""
+        distance = np.asarray(distance).reshape(self._base_shape)
+        if inplace:
+            self += distance
+            return self
+        else:
+            return self + distance
+
+    def _rotation(self, rotmat, rotcenter):
+        raise NotImplementedError
+
+    def _rotxyz(self, axis, rotcenter, angle, degrees):
+        rotcenter = Point(rotcenter)
+        if degrees:
+            angle = np.radians(angle)
+        if axis =="x":
+            rotmat = np.array([[1, 0, 0],
+                               [0, np.cos(angle), -np.sin(angle)],
+                               [0, np.sin(angle), np.cos(angle)]])
+        elif axis == "y":
+            rotmat = np.array([[np.cos(angle), 0, np.sin(angle)],
+                               [0, 1, 0],
+                               [-np.sin(angle), 0, np.cos(angle)]])
+        elif axis == "z":
+            rotmat = np.array([[np.cos(angle), -np.sin(angle), 0],
+                               [np.sin(angle), np.cos(angle), 0],
+                               [0, 0, 1]])
+        else:
+            raise ValueError("axis must be x, y, or z")
+        return self._rotation(rotmat, rotcenter)
+
+    def rotx(self, rotcenter, angle, degrees=True):
+        return self._rotxyz("x", rotcenter, angle, degrees)
+
+    def roty(self, rotcenter, angle, degrees=True):
+        return self._rotxyz("y", rotcenter, angle, degrees)
+
+    def rotz(self, rotcenter, angle, degrees=True):
+        return self._rotxyz("z", rotcenter, angle, degrees)
+
+
+class Network(BasicGeom):
     """
     wgs形式で使用するネットワークのクラス
     Lineの集合として表す
     形式はndim=3のnumpy-ndarray
     """
+    _base_shape = (1,1,3)
 
     def __new__(cls, input_network):
         obj = np.asarray(input_network, dtype=float).view(cls)
@@ -263,20 +311,12 @@ class Network(np.ndarray):
             ax.add_artist(a)
         plt.show()
 
-    def shift(self, shift):
-        return self + shift
-
     def trans(self):
         """Networkの行と列を入れ替える"""
         return self.transpose((1, 0, 2))
 
-    def rotz(self, center, degrees):
-        center = Point(center)
-        rad = np.radians(degrees)
-        rz = np.array([[np.cos(rad), -np.sin(rad), 0],
-                       [np.sin(rad), np.cos(rad), 0],
-                       [0, 0, 1]])
-        return Network([np.dot(rz, row.T).T for row in self.shift(-center)]).shift(center)
+    def _rotation(self, rotmat, rotcenter):
+        return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
 
     def make_wake(self, edge_number, wake_length):
         """Networkのedgeを始点とするwakeのNetworkを返す"""
@@ -287,12 +327,13 @@ class Network(np.ndarray):
         return wake
 
 
-class Line(np.ndarray):
+class Line(BasicGeom):
     """
     Networkを構成するLineのクラス
     Pointの集合として表す
     形式はndim=2のnumpy-ndarray
     """
+    _base_shape = (1,3)
 
     def __new__(cls, input_line):
         obj = np.asarray(input_line, dtype=float).view(cls)
@@ -339,14 +380,9 @@ class Line(np.ndarray):
                 raise ValueError("only Lines can be concatenated")
         return Line(np.concatenate(lines))
 
-    def rotx(self, center, degrees):
-        center = Point(center)
-        rad = np.radians(degrees)
-        rz = np.array([[1, 0, 0],
-                       [0, np.cos(rad), -np.sin(rad)],
-                       [0, np.sin(rad), np.cos(rad)]])
-        shift_line = Line(self - center)
-        return Line((rz @ shift_line.T).T + center)
+    def _rotation(self, rotmat, rotcenter):
+        shift_line = Line(self - rotcenter)
+        return Line((rotmat @ shift_line.T).T + rotcenter)
 
 
 def read_airfoil(filename, chord=1., span_pos=0.):
@@ -386,11 +422,12 @@ def read_airfoil(filename, chord=1., span_pos=0.):
     return Line(afoil_Line)
 
 
-class Point(np.ndarray):
+class Point(BasicGeom):
     """
     Lineを構成するPointのクラス
     中身はnumpyのndarray
     """
+    _base_shape = (3,)
 
     def __new__(cls, input_point):
         obj = np.asarray(input_point, dtype=float).view(cls)
@@ -440,15 +477,6 @@ class Point(np.ndarray):
             return line1.cosspace(line2, column_num)
         else:
             raise ValueError("spacing must be linspace or cosspace")
-
-
-class BasicGeom(np.ndarray):
-    def __new__(cls, input_point):
-        obj = np.asarray(input_point, dtype=float).view(cls)
-        return obj
-
-    def shift(self):
-
 
 
 class Arrow3D(FancyArrowPatch):
