@@ -151,7 +151,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
                 cnt += len(line)
                 if cnt == n_total_pnts: # break after reading all the points in the network
                     break
-            network = np.array(coords, dtype=float).reshape((n_line, n_pnt, 3))
+            network = Network(np.array(coords, dtype=float).reshape((n_line, n_pnt, 3)))
             # set boundary conditions if they are given
             if boun_cond:
                 boun = boun_cond[net_id-1]
