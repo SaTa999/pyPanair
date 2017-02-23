@@ -313,9 +313,9 @@ class Network(BasicGeom):
             ax.add_artist(a)
         plt.show()
 
-    def transpose(self):
+    def trans(self):
         """transpose the row (axis0) and column(axis1) of the Network"""
-        return np.transpose(self, (1, 0, 2))
+        return self.transpose((1, 0, 2))
 
     def _rotate(self, rotmat, rotcenter):
         return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
@@ -327,7 +327,7 @@ class Network(BasicGeom):
         edge = self.edge(edge_number)
         wake_end = edge.replace(x=wake_length)
         wake = Network((edge, wake_end))
-        wake = wake.transpose()
+        wake = wake.trans()
         return wake
 
 
