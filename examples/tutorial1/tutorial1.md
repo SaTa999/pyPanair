@@ -429,7 +429,6 @@ We can see how the local lift coefficient takes the highest value at the root of
 This is a characteristic of the local lft coefficient distribution for a untwisted rectangular wing.
 
 This will be the end of tutorial 1. 
-
 ### References
 1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
 2. Saaris, G. R., "A502I User's Guide-PAN AIR Technology Program for Solving Potential Flow about Arbitrary Configurations," 1992.
