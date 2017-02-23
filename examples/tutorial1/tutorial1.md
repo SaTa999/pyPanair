@@ -3,6 +3,7 @@ Disclaimer: This is a rough draft for `tutorial1.ipynb`. If you're willing to ta
 # pyPanair Tutorial#1 Rectangular Wing  
 In this tutorial we will perform an analysis of a rectangular wing with a NACA0012 airfoil.
 A brief overview of the procedure is listed below:  
+
 1. Define the geometry of the wing using `wgs_creator.py`, and create input files `naca0012.wgs` and `naca0012.aux` for `panin`
 2. Using the preprocessor `panin`, create an input file `a502.in` for `panair`
 3. Run the analysis
@@ -88,7 +89,7 @@ In the next step, the `Network` of the wing will be defined by interpolating two
 root_airfoil = wgs_creator.naca4digit("0012", num=25, chord=100., span_pos=0.)
 ```
 
-The resulting airfoil has a chord length of `100.`, and its spanwise position (e.g. y-axis coordinate) is `0.`.
+The resulting airfoil has a chord length of `100.`, and its spanwise position (i.e. y-axis coordinate) is `0.`.
 The upper and lower surfaces are each represented with `25` points.
 The x and z coordinates of the airfoil look like below:
 
@@ -194,10 +195,131 @@ wgs.create_stl("naca0012.stl")
 A stl file named `naca0012.stl` should be created in the current working directory.
 Open this file with a stl viewer. (I recommend [Materialise MiniMagics 3.0](http://www.materialise.co.jp/minimagics-stl-viewer-0))
 
-Here's a screen shot of what it should look like.
+Below is a screen shot of the stl.
+
+![stl_screenshot](stl_screenshot.png)
+
+Using the stl viewer, we should watch out for the following four points:
+
+1. The stl model is watertight (i.e. No holes between each network)  
+(Note that there seems to be a hole at the root of the wing.
+ However, this model is symmetric with respect to the x-z plane, so the hole actually doesn't exist.)
+2. There are no intersecting networks (i.e. No networks crossing over each other)
+3. The front side of the network (excluding the wake network) is facing outwards.  
+In the picture above, the grey side of the stl (which correspond to the front side of the networks) is facing the flow.
+4. The corners of adjacent networks match each other
+
+If you've followed the instructions, the `naca0012.stl` should fulfill all four points. (If not try again.)
 
 Finally, we will write the input files for `panin`.
-This can be done, using the methods, `write_wgs` and `write_aux`.
+This can be accomplished, using the methods, `write_wgs` and `write_aux`.
+
+```python
+wgs.create_wgs("naca0012.wgs")
+wgs.create_aux("naca0012.aux", alpha=2, mach=0.2, cbar=100., span=600.,
+               sref=60000., xref=25., zref=0.)
+```
+
+Two files, `naca0012.wgs` and `naca0012.aux` should be crated in the current directory.  
+`naca0012.wgs` is a file that defines the geometry of the model.  
+`naca0012.aux` is a file that defines the analysis conditions.  
+The definition of each variable is listed below: 
+* `alpha`: The angle of attack (AoA) of the analysis.  
+When conducting multiple cases, the variable should be a tuple defining the AoAs. (e.g. `(2, 4, 6, 8)`) 
+Up to four cases can be conducted in one run.
+* `mach`: The mach number of the flow
+* `cbar`: The reference chord of the wing
+* `span`: The reference span of the wing
+* `sref`: The reference area of the wing
+* `xref`: The x-axis coordinate of the center of rotation
+* `zref`: The z-axis coordinate of the center of rotation
+
+## 2. Creating an input file for `panair`
+
+In this chapter we will create an input file for `panair`, using its preprocessor `panin`.  
+
+If you do not have a copy of `panin`, download it from [PDAS](http://www.pdas.com/panin.html), and compile it.  
+(I'm using cygwin, so the code blocks below are for cygwin environment.)
+
+```bash
+gfortran -o panin.exe panin.f90
+```
+
+After compiling `panin`, place `panin.exe`, `naca0012.wgs`, and `naca0012.aux` under the `tutorial1/panin/` directory.  
+Then run `panin`.
+
+```bash
+./panin
+```
+
+It should display something like ... 
+```bash
+ Prepare input for PanAir
+  Version 1.0 (4Jan2000)
+ Ralph L. Carmichael, Public Domain Aeronautical Software
+ Enter the name of the auxiliary file: 
+```
+
+Enter `naca0012.aux`. If everything goes fine, it should display
+```bash
+          10  records copied from auxiliary file.
+           9  records in the internal data file.
+  Geometry data to be read from NACA0012.wgs                                                                    
+ Reading WGS file...
+ Reading network wing
+ Reading network wingtip
+ Reading network wingwake
+ Reading input file instructions...
+ Command  1 MACH 0.2
+ Command 11 ALPHA 2
+ Command  6 cbar 100.0
+ Command  7 span 600.0
+ Command  2 sref 60000.0
+ Command  3 xref 25.0
+ Command  5 zref 0.0
+ Command 35 BOUN 1 1 18
+ Writing PanAir input file...
+  Files a502.in added to your directory.
+ Also, file panin.dbg
+ Normal termination of panin, version 1.0 (4Jan2000)
+ Normal termination of panin
+```
+
+and `a502.in` (an input file for `panair`) should be created under the current directory.
+
+
+## 3. Running `panair`
+
+Now its time to run the analysis.  
+If you do not have a copy of `panair`, download it from [PDAS](http://www.pdas.com/panair.html), and compile it.
+(A bunch of warnings will appear, but it should work.)
+
+```bash
+gfortran -o panair.exe -Ofast -march=native panair.f90
+```
+
+Place `panair.exe` and `a502.in` under the `tutorial1/panair/` directory, and run `panair`.
+
+```bash
+./panair
+```
+
+`panair` should display the below text.
+
+```bash
+ Panair High Order Panel Code, Version 15.0 (10 December 2009)
+ Enter name of input file:
+```
+
+Enter `a502.in`. The analysis will end in a few seconds.  
+After the analysis ends, the output files such as , `panair.out`, `agps`, and `ffmf` will be created in the current directory.  
+`panair.out` contains the output of the whole analysis (e.g. source and doublet strength of each panel)  
+`agps` contains the surface pressure distribution for each case  
+`ffmf` contains the aerodynamic coefficients for each case  
+
+* Warning: Along with the output files, you will also notice the existence of intermediate files (e.g. `rwms01`).  
+Users should always delete these intermediate files when running new cases.  
+(To do so, run `clean502.bat` or `clean502.sh` which is contained in the archive file `panair.zip`)
 
 
 ### References
