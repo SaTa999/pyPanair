@@ -392,9 +392,36 @@ Below is a screen shot of ParaView.
 Next, we calculate the local lift coefficient from the surface pressure distribution.  
 This can be done using the `calc_section_force` function.
 
+```python
+from pyPanair.postprocess import calc_section_force
+calc_section_force(aoa=6, mac=100., rot_center=(25,0,0), casenum=1, networknum=1)
+```
+
+The definition of each variable is as follows:  
+
+* `aoa`: The AoA of the case
+* `mac`: The mean aerodynamic chord of the wing
+* `rot_center`: The xyz-axis coordinates of the center of rotation
+* `casenum`: The case number of the analysis (e.g. `2` if the `sol-num` for the case is `2` in `ffmf`)
+* `networknum`: The network number of the wing (e.g. `1` if the wing is first network in the LaWGS file)
+
+`section_force.csv` should be created in the current directory.
+To visualize it, we will use `pandas`.
+
+
+```python
+import pandas as pd
+section_force = pd.read_csv("section_force.csv")
+section_force
+
+plt.plot(section_force.pos, section_force.cl, "s", mfc="None", mec="b")
+plt.xlabel("spanwise position")
+plt.ylabel("local lift coefficient")
+plt.grid()
+plt.show()
+```
 
 ### References
----------------------------------------
 1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
 2. Saaris, G. R., "A502I User's Guide-PAN AIR Technology Program for Solving Potential Flow about Arbitrary Configurations," 1992.
 3. Moran, J., *An Introduction to Theoretical and Computational Aerodynamics*, John Wiley & Sons, Inc., 1984.
