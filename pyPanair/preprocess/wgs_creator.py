@@ -402,13 +402,14 @@ class Line(BasicGeom):
         second_half = Line(np.array(self[self.shape[0]//2:]))
         return first_half, second_half
 
-def read_airfoil(filename, chord=1., span_pos=0.):
+def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     """ read the coordinates of a airfoil from a csv file and create Line from it
-    see the example "naca2412.csv" in the examples directory
+    see the examples "naca2412.csv" and "rae2822.csv" in the examples directory
     upper and lower surfaces must have the same number of points
     first and last points of the upper and lower surfaces must coincide
     :param filename: name of the csv file
-    :param chord: the "Line" representation of the airfoil wil have a chord length of "chord"
+    :param span_pos: the y-axis coordinate will be set at span_pos
+    :param expansion_ratio: the chord length and thickness (i.e. x,z-axis coordinates) will be multiplied by this ratio
     """
     afoil = pd.read_csv(filename)
     # assert that the upper and lower surfaces have the same number of points
@@ -419,11 +420,6 @@ def read_airfoil(filename, chord=1., span_pos=0.):
         raise ValueError("first points of the upper and lower surfaces must coincide")
     if not np.array_equal(afoil.tail(1)[["xup/c", "zup/c"]], afoil.tail(1)[["xlow/c", "zlow/c"]]):
         raise ValueError("last points of the upper and lower surfaces must coincide")
-    # rescale the airfoil chord
-    up_chord = afoil["xup/c"].max() - afoil["xup/c"].min()
-    low_chord = afoil["xlow/c"].max() - afoil["xlow/c"].min()
-    afoil_chord = max(up_chord, low_chord)
-    afoil *= chord / afoil_chord
     # convert the airfoil csv into a Line
     xup = np.flipud(afoil["xup/c"])
     zup = np.flipud(afoil["zup/c"])
@@ -431,11 +427,12 @@ def read_airfoil(filename, chord=1., span_pos=0.):
     zlow = afoil["zlow/c"].values
     n_pnts = xup.shape[0]
     afoil_Line = np.ones((n_pnts*2-1,3))
-    afoil_Line *= span_pos
+    afoil_Line[:, 1] *= span_pos
     afoil_Line[:n_pnts, 0] = xup
     afoil_Line[:n_pnts, 2] = zup
     afoil_Line[n_pnts:, 0] = xlow[1:]
     afoil_Line[n_pnts:, 2] = zlow[1:]
+    afoil_Line[:, [0,2]] *= expansion_ratio
     return Line(afoil_Line)
 
 
