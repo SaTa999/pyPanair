@@ -252,7 +252,7 @@ Then run `panin`.
 ./panin
 ```
 
-It should display something like ... 
+It will display 
 ```bash
  Prepare input for PanAir
   Version 1.0 (4Jan2000)
@@ -304,7 +304,7 @@ Place `panair.exe` and `a502.in` under the `tutorial1/panair/` directory, and ru
 ./panair
 ```
 
-`panair` should display the below text.
+`panair` will display the below text.
 
 ```bash
  Panair High Order Panel Code, Version 15.0 (10 December 2009)
@@ -313,6 +313,7 @@ Place `panair.exe` and `a502.in` under the `tutorial1/panair/` directory, and ru
 
 Enter `a502.in`. The analysis will end in a few seconds.  
 After the analysis ends, the output files such as , `panair.out`, `agps`, and `ffmf` will be created in the current directory.  
+
 `panair.out` contains the output of the whole analysis (e.g. source and doublet strength of each panel)  
 `agps` contains the surface pressure distribution for each case  
 `ffmf` contains the aerodynamic coefficients for each case  
@@ -321,8 +322,43 @@ After the analysis ends, the output files such as , `panair.out`, `agps`, and `f
 Users should always delete these intermediate files when running new cases.  
 (To do so, run `clean502.bat` or `clean502.sh` which is contained in the archive file `panair.zip`)
 
+## 4. Visualizing the output
+
+In this chapter we will visualize the results of the analysis, but before we do so, we will validate the results by checking the aerodynamic coefficients.  
+
+Open the `ffmf` file contained in the `tutorial1/panair/` directory with a text editor.  
+After the headers of the file, you shall see 
+
+```
+ sol-no     alpha      beta            cl           cdi            cy            fx            fy            fz
+                                                                                 mx            my            mz            area
+ ------   -------   -------       -------       -------     ---------     ---------     ---------     ---------    ------------
+
+      1    2.0000    0.0000       0.16011       0.00068       0.00000      -0.00491       0.00000       0.16004
+                                                                            0.00000       0.00067       0.00000    123954.39335
+```
+
+This area shows the aerodynamic coefficients of each case.  
+A brief explanation of each column is listed below:  
+
+* `sol-no`: The case number
+* `alpha`: The AoA of the case
+* `beta`: The side slip angle of the case
+* `cl`: The lift coefficient of the entire geometry
+* `cdi`: The induced drag coefficient of the entire geometry
+* `cy`: The side force coefficient of the entire geometry
+* `fx, fy, fz`: The non-dimensional force in x, y, z direction, respectively
+* `mx, my, mz`: The non-dimensional torque in x, y, z direction, respectively
+
+Notice that `cl` and `fz` do not match.
+This is because, `cl` is obtained from a trefz plane analysis, whereas `fz` is obtained by integrating the surface pressure of the geometry.
+The same can be said for `cdi` and `fx`.
+
+According to reference 3, 
 
 ### References
 ---------------------------------------
 1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
 2. Saaris, G. R., "A502I User's Guide-PAN AIR Technology Program for Solving Potential Flow about Arbitrary Configurations," 1992.
+3. Moran, J., *An Introduction to Theoretical and Computational Aerodynamics*, John Wiley & Sons, Inc., 1984.
+
