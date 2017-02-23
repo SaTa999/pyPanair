@@ -322,8 +322,9 @@ After the analysis ends, the output files such as , `panair.out`, `agps`, and `f
 Users should always delete these intermediate files when running new cases.  
 (To do so, run `clean502.bat` or `clean502.sh` which is contained in the archive file `panair.zip`)
 
-## 4. Visualizing the output
+## 4. Validating and visualizing the output
 
+### 4.1 Validation
 In this chapter we will visualize the results of the analysis, but before we do so, we will validate the results by checking the aerodynamic coefficients.  
 
 Open the `ffmf` file contained in the `tutorial1/panair/` directory with a text editor.  
@@ -354,7 +355,41 @@ Notice that `cl` and `fz` do not match.
 This is because, `cl` is obtained from a trefz plane analysis, whereas `fz` is obtained by integrating the surface pressure of the geometry.
 The same can be said for `cdi` and `fx`.
 
-According to reference 3, 
+According to the lifiting line theory<sup>(3</sup>, when the AoA is $\alpha\mathrm{[rad]}$, the lift coefficient ($C_L$) and induced drag coefficient ($C_{D_i}$) for a untwisted uncambered rectangular wing with an aspect ratio of $6$ is 
+$$C_L = 0.9160\frac{\pi^2}{2}\alpha$$
+$$C_{D_i} = 0.8744\frac{\pi^3}{24}\alpha^2$$
+In our analysis, the AoA is $0.1047 \mathrm{[rad]}$, so the lift and drag coefficients should be $C_L = 0.4734$ and $C_{D_i} = 0.01239$.  
+The analysis predicted a fairly close value of $C_L = 0.4785$ and $C_{D_i} = 0.01266$.  
+
+### 4.2 Visualization of the surface pressure distribution
+Now we shall move on to the visualization of the result.  
+
+First, we begin by converting the `agps` file into a format that can be used in common visualization applications.  
+The `agps` file can be converted into three formats:
+  
+1. `vtk`: Legacy paraview format  
+2. `vtu`: Multi-block paraview format  
+3. `dat`: Multi-block tecplot format
+
+In this tutorial we choose the `vtk` format.
+To convert the `agps` file, first move the `agps` file to the `tutorial1/` directory.  
+Then, use the `write_vtk` method of `pyPanair`. (If you wish to use tecplot, enter `write_tec` instead of `write_vtk`.)  
+
+```python
+from pyPanair.postprocess import agps_converter
+agps_converter.write_vtk(n_wake=1)
+```
+
+(The `n_wake` variable is used to input the number of wakes. 
+For example, if we enter `1`, the last `1` networks in the geometry will not be included in the output `vtk` file.)
+
+`agps.vtk` should be created in the current directory.  
+It can be open using [ParaView](http://www.paraview.org/).  
+
+Below is a screen shot of ParaView.  
+
+### 4.3
+
 
 ### References
 ---------------------------------------
