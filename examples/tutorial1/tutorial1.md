@@ -162,11 +162,44 @@ wgs.append_network("wingtip", wingtip, 1)
 In addition to the `wing` and `wingtip`, we also must define the "wake" of the wing.
 In `Panair`, the wake is defined as a square network stretching out from the trailing edge of the wing.
 The length of the wake should be about 25 to 50 times the length of the reference chord of the wing.
-The wake can be defined easily by using the method ``
+The wake can be easily defined by using the method `make_wake`.
 
 ```python
-
+wingwake = wing.make_wake(edge_number=3, wake_length=50*100.)
 ```
+
+The `edge_number` variable, means that we are attaching the wake to `edge3` of the `Network` `wing`.
+The `wake_length` variable defines how long the wake is.
+In this case, the wake stretches from `x=100.` (the TE of the wing) to `x=5000.`.
+
+The `wingwake` will also be registered to `wgs`.
+
+```python
+wgs.append_network("wingwake", wingwake, 18)
+```
+
+Notice that this time we are setting the boundary type as `18`.
+Boundary type `18` is used to define the that network is a "wake" emitted from sharp edges.
+
+Now that we have finished defining the geometry of the rectangular wing,
+we will check to see if there are any errors in the model we've constructed.
+
+To make this task easier, we will write the geometry into a STL (STereoLithography) format.
+To do so, type
+
+```python
+wgs.create_stl("naca0012.stl")
+```
+
+A stl file named `naca0012.stl` should be created in the current working directory.
+Open this file with a stl viewer. (I recommend [Materialise MiniMagics 3.0](http://www.materialise.co.jp/minimagics-stl-viewer-0))
+
+Here's a screen shot of what it should look like.
+
+Finally, we will write the input files for `panin`.
+This can be done, using the methods, `write_wgs` and `write_aux`.
+
+
 ### References
 ---------------------------------------
 1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
