@@ -1,8 +1,7 @@
 Disclaimer: This is a rough draft for `tutorial1.ipynb`. If you're willing to take the tutorial check the jupyter notebook instead.
 
 # pyPanair Tutorial#1 Rectangular Wing  
----------------------------------------
-In this tutorial we will perform an analysis of a rectangular wing with a NACA0012 airfoil.  
+In this tutorial we will perform an analysis of a rectangular wing with a NACA0012 airfoil.
 A brief overview of the procedure is listed below:  
 1. Define the geometry of the wing using `wgs_creator.py`, and create input files `naca0012.wgs` and `naca0012.aux` for `panin`
 2. Using the preprocessor `panin`, create an input file `a502.in` for `panair`
@@ -10,7 +9,6 @@ A brief overview of the procedure is listed below:
 4. Visualize the results from the analysis via `agps_converter.py`, `ffmf_converter.py`, and `calc_section_force.py`
 
 ## 1. Defining the geometry
----------------------------------------
 ### 1.1 LaWGS Format
 First off, we will begin by defining the geometry of the rectangular wing.
 
@@ -84,8 +82,92 @@ Now we will begin the actual work of creating a LaWGS file. First, we start of b
 wgs = wgs_creator.LaWGS("NACA0012")
 ```
 
-Next, we will define the `Network` of the wing by interpolating two `Lines`, the `root_airfoil` and `tip_airfoil`
+In the next step, the `Network` of the wing will be defined by interpolating two `Lines`, the `root_airfoil` and `tip_airfoil`. The `root_airfoil`, which is an NACA0012 airfoil, can be constructed using the `naca4digit` method.
 
+```python
+root_airfoil = wgs_creator.naca4digit("0012", num=25, chord=100., span_pos=0.)
+```
+
+The resulting airfoil has a chord length of `100.`, and its spanwise position (e.g. y-axis coordinate) is `0.`.
+The upper and lower surfaces are each represented with `25` points.
+The x and z coordinates of the airfoil look like below:
+
+```python
+import matplotlib.pyplot as plt
+plt.plot(root_airfoil[:,0], root_airfoil[:,2], "s", mfc="None", mec="b")
+plt.xlabel("x")
+plt.ylabel("z")
+plt.grid()
+```
+
+The `tip_airfoil` can be defined in the same manner as the `root_airfoil`.
+However, this time, the spanwise position will be `span_pos=300.`.
+
+```python
+tip_airfoil = wgs_creator.naca4digit("0012", num=25, chord=100., span_pos=300.)
+```
+
+The `Network` of the wing will be defined by interpolating to the two `Lines`, `root_airfoil` and `tip_airfoil`.
+To do so, we simply use the `linspace` method.
+
+```python
+wing = root_airfoil.linspace(tip_airfoil, num=20)
+```
+
+The wing `Network` will have `20` lines, which are linear interpolations of the `root_airfoil` and `tip_airfoil`.
+`Networks` can be visualized using the `plot_wireframe` method.
+
+```python
+wing.plot_wireframe()
+```
+
+Along with coordinates of each point in the `Network`, the corners (e.g. `1`) and edges (e.g. `edge1`) are displayed.
+(Read reference 1 for more information on network corners and edges.)
+Also, an arrow indicating the front side of the network is depicted.
+(Details of "front side" will be mentioned later.)
+
+After defining the `Network` for the wing, we register it to `wgs` using the `append_network` method.
+
+```python
+wgs.append_network("wing", wing, 1)
+```
+
+The first variable, `"wing"`, is the name of the network.
+The second variable, `wing`, is the `Network` we are registering.
+The third variable, `1`, is the boundary type of the network. If the network represents a solid wall, the type is `1`.
+(Read [reference 2](https://docs.google.com/file/d/0B2UKsBO-ZMVgS1k5VElNamx1cUk/edit) for more information on the different types of boundary conditions.)
+
+The next process will be to define the geometry of the wingtip.
+To do so, we will split the `tip_airfoil` into upper and lower halves, and linearly interpolate them.
+All of this can be done by typing
+
+```python
+wingtip_upper, wingtip_lower = tip_airfoil.split_half()
+wingtip_lower = wingtip_lower.flip()
+wingtip = wingtip_upper.linspace(wingtip_lower, num = 5)
+```
+
+The wing tip will look like ...
+
+```python
+wingtip.plot_wireframe()
+```
+
+The `wingtip` will also be registered to `wgs`.
+
+```python
+wgs.append_network("wingtip", wingtip, 1)
+```
+
+In addition to the `wing` and `wingtip`, we also must define the "wake" of the wing.
+In `Panair`, the wake is defined as a square network stretching out from the trailing edge of the wing.
+The length of the wake should be about 25 to 50 times the length of the reference chord of the wing.
+The wake can be defined easily by using the method ``
+
+```python
+
+```
 ### References
 ---------------------------------------
-[1] Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
+1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.
+2. Saaris, G. R., "A502I User's Guide-PAN AIR Technology Program for Solving Potential Flow about Arbitrary Configurations," 1992.

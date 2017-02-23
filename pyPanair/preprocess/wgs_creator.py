@@ -315,7 +315,7 @@ class Network(BasicGeom):
 
     def transpose(self):
         """transpose the row (axis0) and column(axis1) of the Network"""
-        return self.transpose((1, 0, 2))
+        return np.transpose(self, (1, 0, 2))
 
     def _rotate(self, rotmat, rotcenter):
         return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
