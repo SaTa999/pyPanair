@@ -38,7 +38,7 @@ class LaWGS:
         """ create a .wgs file from a LaWGS object"""
         if filename is None:
             filename = "{}.wgs".format(self.name)
-        wgs = "{} created from wgs_creator\n".format(self.name)
+        wgs = "{} created by wgs_creator\n".format(self.name)
         for (net_name, net) in zip(self._network_names, self._networks):
             wgs += "{}\n".format(net_name)
             num_rows, num_columns = net.shape[:2]
@@ -59,7 +59,7 @@ class LaWGS:
             else:
                 raise
         boun = " ".join(map(str, self._boundary_types))
-        aux = ["// PAN AIR CASE MANUAL CASE 1",
+        aux = ["// Auxiliary files for {}".format(self.name),
                "WGS {}".format(wgs_filename),
                "MACH {}".format(mach),
                "ALPHA {}".format(alpha),
