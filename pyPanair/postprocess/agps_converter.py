@@ -23,7 +23,7 @@ def read_column(file, firstline):
 def read_network(file, firstheader):
     """read a network"""
     network_n = int(firstheader[0][1:3]) # get network number from the first header (e.g. 01 from n01c001)
-    print("loading network no.", network_n)
+    # print("loading network no.", network_n)
     network = list()
     line = firstheader
     # register methods for faster evaluation

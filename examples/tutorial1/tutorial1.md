@@ -373,22 +373,24 @@ The `agps` file can be converted into three formats:
 
 In this tutorial we choose the `vtk` format.
 To convert the `agps` file, first move the `agps` file to the `tutorial1/` directory.  
-Then, use the `write_vtk` method of `pyPanair`. (If you wish to use tecplot, enter `write_tec` instead of `write_vtk`.)  
+Then, use the `write_vtk` function of `pyPanair`. (If you wish to use tecplot, enter `write_tec` instead of `write_vtk`.)  
 
 ```python
-from pyPanair.postprocess import agps_converter
-agps_converter.write_vtk(n_wake=1)
+from pyPanair.postprocess import write_vtk
+write_vtk(n_wake=1)
 ```
 
 (The `n_wake` variable is used to input the number of wakes. 
-For example, if we enter `1`, the last `1` networks in the geometry will not be included in the output `vtk` file.)
+For example, if we enter `2`, the last `2` networks in the geometry will not be included in the output `vtk` file.)
 
-`agps.vtk` should be created in the current directory.  
-It can be open using [ParaView](http://www.paraview.org/).  
+`agps.vtk` should be created in the current directory, which can be open with [ParaView](http://www.paraview.org/).  
 
 Below is a screen shot of ParaView.  
 
-### 4.3
+### 4.3 Visualization of the local lift coefficient
+ 
+Next, we calculate the local lift coefficient from the surface pressure distribution.  
+This can be done using the `calc_section_force` function.
 
 
 ### References
