@@ -387,6 +387,10 @@ For example, if we enter `2`, the last `2` networks in the geometry will not be 
 
 Below is a screen shot of ParaView.  
 
+![paraview_screenshot](paraview_screenshot.png)
+
+We can precieve that the flow is being accelerated near the leading edge of the wing.  
+
 ### 4.3 Visualization of the local lift coefficient
  
 Next, we calculate the local lift coefficient from the surface pressure distribution.  
@@ -420,6 +424,11 @@ plt.ylabel("local lift coefficient")
 plt.grid()
 plt.show()
 ```
+
+We can see how the local lift coefficient takes the highest value at the root of the wing and decreases as it get closer to the tip of the wing.  
+This is a characteristic of the local lft coefficient distribution for a untwisted rectangular wing.
+
+This will be the end of tutorial 1. 
 
 ### References
 1. Craidon, C. B., "A Description of the Langley Wireframe Geometry Standard (LaWgs) Format," *NASA TM 85767*, 1985.

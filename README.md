@@ -36,3 +36,6 @@ An [Anaconda3](https://www.continuum.io/) environment is recommended.
 ## Example
 Example scripts and files are bundled in the "examples" directory.  
 Run the scripts in each directory to check out how pyPanair works.   
+
+## Tutorial
+A tutorial of `pyPanair` is included in `examples/tutorial1/tutorial1.ipynb`.  
