@@ -4,7 +4,7 @@ DISTNAME = 'pyPanair'
 MAINTAINER = 'STakanashi'
 LICENSE = 'MIT'
 DOWNLOAD_URL = 'https://github.com/SaTa999/pyPanair'
-VERSION = '0.5.0'
+VERSION = '0.6.0'
 
 try:
     from setuptools import setup

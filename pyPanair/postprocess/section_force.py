@@ -51,7 +51,7 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
         norm *= flip # flip the norm vectors to make them point inward
         chord = np.linalg.norm(line_clip[0] - line_clip[line_clip.shape[0]//2])
 
-        coeff_all = [y]
+        coeff_all = [y, chord]
         # the definition of each variable is explained in the reference
         cp2 = line.T[3+casenum]
         cp1 = np.roll(cp2, 1, axis=0)
@@ -73,6 +73,6 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
         coeff_all += coeff
         result.append(coeff_all)
     result = np.array(result)
-    columns = ["pos", "cd", "cl", "cm"]
+    columns = ["pos", "chord", "cd", "cl", "cm"]
     result = pd.DataFrame(result, columns=columns)
     result.to_csv("section_force.csv", index=False)
