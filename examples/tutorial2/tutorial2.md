@@ -3,7 +3,13 @@ If you're willing to take the tutorial check the jupyter notebook instead.
 
 # pyPanair Tutorial#2 Tapered Wing  
 In this tutorial we will perform an analysis of a tapered wing.  
-The wing will have different wing sections at the root, kink, and tip.
+The wing will have different wing sections at the root, kink, and tip.  
+
+Below are the planform of the wing and contour plots of the wing sections, respectively.
+
+![planform]()
+
+![wingsections]()
 
 ## 1.Defining the geometry
 Just as we have done in tutorial 1, we will use the `wgs_creator` module to define the geometry of the wing.
@@ -13,6 +19,26 @@ First off, we initialize a `LaWGS` object.
 ```python
 wgs = wgs_creator.LaWGS("tapered_wing")
 ```
+
+Next, we create a `Line` object that defines the coordinates of the airfoil at the root of the wing.  
+To do so, we will read a csv file that contains the coordinates of the airfoil, using the `read_airfoil` function.  
+
+Three csv files, `root.csv`, `kink.csv`, and `tip.csv` have been prepared for this tutorial.  
+
+Before we creating the `Line` object, we will take a quick view of these files.  
+For example, the `root.csv` looks like ...
+
+```python
+import pandas as pd
+pd.set_option("display.max_rows", 10)
+pd.read_csv("root.csv")
+```
+
+The first and second columns `xup` and `zup` represent the x & z coordinates of the upper surface of the airfoil.  
+The third and fourth columns `xlow` and `zlow` represent the x & z coordinates of the lower surface of the airfoil.  
+
+
+
 
 In the next step, the `Network` of the wing will be defined by interpolating two `Lines`, the `root_airfoil` and `tip_airfoil`. The `root_airfoil`, which is an NACA0012 airfoil, can be constructed using the `naca4digit` method.
 

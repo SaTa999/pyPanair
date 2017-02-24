@@ -416,15 +416,15 @@ def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     if np.unique(afoil.count()).size >= 2:
         raise ValueError("upper and lower surfaces must have the same number of points")
     # assert that the first and last points of the upper and lower surfaces coincide
-    if not np.array_equal(afoil.head(1)[["xup/c", "zup/c"]], afoil.head(1)[["xlow/c", "zlow/c"]]):
+    if not np.array_equal(afoil.head(1)[["xup", "zup"]], afoil.head(1)[["xlow", "zlow"]]):
         raise ValueError("first points of the upper and lower surfaces must coincide")
-    if not np.array_equal(afoil.tail(1)[["xup/c", "zup/c"]], afoil.tail(1)[["xlow/c", "zlow/c"]]):
+    if not np.array_equal(afoil.tail(1)[["xup", "zup"]], afoil.tail(1)[["xlow", "zlow"]]):
         raise ValueError("last points of the upper and lower surfaces must coincide")
     # convert the airfoil csv into a Line
-    xup = np.flipud(afoil["xup/c"])
-    zup = np.flipud(afoil["zup/c"])
-    xlow = afoil["xlow/c"].values
-    zlow = afoil["zlow/c"].values
+    xup = np.flipud(afoil["xup"])
+    zup = np.flipud(afoil["zup"])
+    xlow = afoil["xlow"].values
+    zlow = afoil["zlow"].values
     n_pnts = xup.shape[0]
     afoil_Line = np.ones((n_pnts*2-1,3))
     afoil_Line[:, 1] *= span_pos
