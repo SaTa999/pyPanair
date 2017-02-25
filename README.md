@@ -6,6 +6,7 @@ A copy of these software can be obtained at [Public Domain Aeronautical Software
 ## What can "pyPanair" do?  
 List of things that pyPanair can do (check the examples)
 * Define the geometry of a wing in the LaWGS format (tutorial 1 & 2)
+* Define the geometry of a wing/body configuration in the LaWGS format (tutorial 3)
 * Converts LaWGS format files to stl format (convert_wgs)  
 * Converts agps format files to vtk (legacy Paraview), vtm (multiblock Paraview),
  or dat (multiblock Tecplot) format (convert agps)  
@@ -26,7 +27,7 @@ pip install git+https://github.com/SaTa999/pyPanair
 ```
 
 ## Requirements
-pyPanair requires python 3  
+pyPanair requires python 3.5+  
 (tests have only been performed for python 3.6)  
 An [Anaconda3](https://www.continuum.io/) environment is recommended.
 
@@ -35,5 +36,4 @@ Example scripts and files are bundled in the "examples" directory.
 Run the scripts in each directory to check out how pyPanair works.   
 
 ## Tutorial
-A tutorial of `pyPanair` is included in `examples/tutorial1/tutorial1.ipynb`
-and `examples/tutorial2/tutorial2.ipynb`.  
+Tutorials of `pyPanair` is included in `examples` directory.
