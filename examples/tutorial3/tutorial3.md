@@ -190,20 +190,121 @@ aft_body_low = wgs_creator.Network(aft_body_low)
 wgs.append_network("abody_low", aft_body_low, 1)
 ```
 
-```python
+### 1.5 Body base
 
+The body base is a circle.
+The arc is defined by `edge3` from the `Networks` `aft_body_up` and `aft_body_low`  
+We'll use the `edge` method to create `Line` objects from these `Networks`.
+
+```python
+body_base_line_up = aft_body_up.edge(3)
+body_base_line_up = body_base_line_up.flip()
+body_base_line_low = aft_body_low.edge(3)
+body_base_line_low = body_base_line_low.flip()
+body_base_line = body_base_line_up.concat(body_base_line_low)
+body_base_line2 = body_base_line.replace(x=8.5, y=0., z=0.)
+body_base = body_base_line.linspace(body_base_line2, num=3)
 ```
 
-```python
+Note that when registering a body base, the boundary type should be `5`.
 
-```
-```python
+### 1.6 Wakes
 
-```
-```python
+For this model we need to attach 3 types of wakes: 
+1. Wing wake
+2. Body base wake
+3. Body wake
 
+The wing wake can be created in the same way as tutorials 1 and 2.  
+
+```python
+wake_length = 2.3093 * 50
+wing_wake = wing.make_wake(3, wake_length)
 ```
+
+The body base wake will be attached to `edge3` of the `Networks` `aft_body_up` and `aft_body_low`.
+
+```python
+body_base_wake_up = aft_body_up.make_wake(3, wake_length)
+wgs.append_network("b_wake_up", body_base_wake_up, 18)
+body_base_wake_low = aft_body_up.make_wake(3, wake_length)
+wgs.append_network("b_wake_low", body_base_wake_low, 18)
+```
+
+The body wake is a wake that connects the wing wake and body base wake. 
+We will attach it to `edge4` of `aft_body_up`.  
+
+```python
+body_wake = aft_body_up.make_wake(4, wake_length)
+```
+
+Note that corner `1` of the body base wake must lie at the intersection of the wing TE and the inboard edge of the wing wake.
+Also, the boundary type for a body wake is `20`.
+
+(Read 3.3.2.5 of [Vol.2 of the user manual<sup>2</sup>](https://ntrs.nasa.gov/search.jsp?R=19920013622) for more information on body wakes.)  
+
+Next, we create a stl file and check for errors.  
+
+```python
+wgs.create_stl("agardb_mod.stl", include_wake=True)
+```
+
+Finally, we create input files for `panin`.
+
+```python
+wgs.create_wgs("agardb_mod.wgs")
+wgs.create_aux("agardb_mod.aux", alpha=5., mach=1.4, cbar=2.3093, span=4., sref=6.928, xref=5.943, zref=0.)
+```
+
+## 2. Analysis
+
+After creating the geometry of the model, run the analysis.  
+(If you are unaware of how to do so, check tutorial 1 or 2.)
+
+## 3. Validation and visualization
+
+First, we'll validate the results by comparing the aerodynamic coefficients to reference 1.  
+
+```python
+from pyPanair.postprocess import read_ffmf
+read_ffmf()
+```
+
+According to reference 1, the aerodynamic coefficients for an AGARD-B model at an angle of attack of 5.0 degrees, mach number of 5.0, and a Reynolds number of around 10.4 million is,  
+$$\begin{align}C_L&=0.224 \\
+C_D&=0.0435 \\
+C_M&=-0.019\end{align}$$  
+The lift and drag coefficients are fairly close to the results from reference 1, considering the fact that we've slightly tampered with the shape of aft-body.  
+On the other hand, the pitching moment coefficient does not match with reference 1. 
+This may be due to either the modified aft-body or the coarse paneling.
+
+Visualization can be done in the same way as tutorials 1 and 2.  
+
+```python
+from pyPanair.postprocess import write_vtk, write_tec
+write_vtk(n_wake=4)
+write_tec()
+
+import pandas as pd
+from pyPanair.postprocess import calc_section_force
+calc_section_force(aoa=5., mac=2.3093, rot_center=(5.943,0,0), casenum=1, networknum=1)
+
+section_force = pd.read_csv("section_force.csv")
+section_force
+
+section_force = section_force.dropna()
+plt.plot(section_force.pos / 2, section_force.cl * section_force.chord, "s", mfc="None", mec="b")
+plt.xlabel("spanwise position [normalized]")
+plt.ylabel("$C_l$ * chord")
+plt.grid()
+plt.show()
+```
+
+This is the end of tutorial 3.  
 
 ### Reference
 1. Damljanović, D., Vitić, A., Vuković, Đ., and Isaković, J. 
 "Testing of AGARD-B calibration model in the T-38 trisonic wind tunnel," *Scientific Technical Review*, Vol. 56, No. 2, 2006, pp. 52-62.
+2. Sidwell, K. W., Baruah, P. K., Bussoletti, J. E., Medan, R. T., Conner, R. S., and Purdon, D. J.,
+"PAN AIR: A computer program for predicting subsonic or supersonic linear potential flows about arbitrary configurations using a higher order panel method. Volume 2: User's manual (version 3.0),"
+ *NASA CR 3252*, 1990.
