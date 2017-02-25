@@ -129,8 +129,65 @@ wgs.append_network("n_fb_low", nose_fbody_low, 1)
 
 ### 1.3 Mid-body
 
-```python
+The mid-body is a cylinder with a hole at the section where the body and wing intersect.  
 
+First, we define the upper surface.
+
+```python
+wingroot_up, wingroot_low = root_airfoil.split_half()
+mbody_line = wingroot_up.replace(z=0.)
+
+mbody_up = list()
+for i in np.linspace(90, 0, 7)[:-1]:
+    line = mbody_line.rotx((0,0,0), angle=i)
+    mbody_up.append(line)
+mbody_up.append(wingroot_up)
+mbody_up = wgs_creator.Network(mbody_up)
+wgs.append_network("mbody_up", mbody_up, 1)
+```
+
+Next, we define the lower surface.
+
+```python
+wingroot_low = wingroot_low.flip()
+mbody_low = list()
+mbody_low.append(wingroot_low)
+for i in np.linspace(0, -90, 7)[1:]:
+    line = mbody_line.rotx((0,0,0), angle=i)
+    mbody_low.append(line)
+mbody_low = wgs_creator.Network(mbody_low)
+wgs.append_network("mbody_low", mbody_low, 1)
+```
+
+### 1.4 Aft-body
+  
+In the original AGARD-B model, the aft-body is a cylinder.  
+However, in this tutorial it will be a circular truncated cone, for the sake of learning how to attach body wakes.  
+
+First, we define the `Line` for the aft-body at `z=0.`.
+
+```python
+aft_body_p1 = wgs_creator.Point(root_airfoil[0])
+aft_body_p2 = aft_body_p1.shift((1.402, -0.05, 0.))
+aft_body_line = aft_body_p1.linspace(aft_body_p2, num=5)
+```
+
+After that, we define the `Networks` for the upper and lower surfaces.
+
+```python
+aft_body_up = list()
+for i in np.linspace(0, 90, num=7):
+    line = aft_body_line.rotx((0,0,0), angle=i)
+    aft_body_up.append(line)
+aft_body_up = wgs_creator.Network(aft_body_up)
+wgs.append_network("abody_up", aft_body_up, 1)
+
+aft_body_low = list()
+for i in np.linspace(-90, 0, num=7):
+    line = aft_body_line.rotx((0,0,0), angle=i)
+    aft_body_low.append(line)
+aft_body_low = wgs_creator.Network(aft_body_low)
+wgs.append_network("abody_low", aft_body_low, 1)
 ```
 
 ```python
@@ -140,16 +197,12 @@ wgs.append_network("n_fb_low", nose_fbody_low, 1)
 ```python
 
 ```
-
 ```python
 
 ```
-
 ```python
 
 ```
-
-
 
 ### Reference
 1. Damljanović, D., Vitić, A., Vuković, Đ., and Isaković, J. 
