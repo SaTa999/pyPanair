@@ -20,7 +20,6 @@ fhandler.setLevel(INFO)
 logger.setLevel(INFO)
 logger.addHandler(shandler)
 logger.addHandler(fhandler)
-logger.info("start batch analysis")
 
 
 def run_panin(directory, aux):
@@ -36,12 +35,16 @@ def run_panin(directory, aux):
 def run_panair(directory):
     process = Popen("./panair", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=directory)
     stdout, stderr = process.communicate(b"a502.in")
-    if "PanAir is stopping." in open(os.path.join(directory, "panair.err")).read():
-        logger.critical("\n".join((directory, "fatal error with PanAir")))
     if stderr:
         logger.error("\n".join((directory, str(stderr))))
     else:
         logger.debug("\n".join((directory, str(stdout))))
+    try:
+        with open(os.path.join(directory, "panair.err")) as f:
+            if "PanAir is stopping." in f.read():
+                logger.critical("\n".join((directory, "fatal error with PanAir")))
+    except FileNotFoundError:
+        pass
 
 
 def safe_makedirs(path):
@@ -63,7 +66,7 @@ def copy2dir(files, olddir, newdir):
             logger.error(e)
 
 
-def run_analysis(casenum, auxname, analysis_dir, params):
+def run_analysis(casenum, aux, analysis_dir, params):
     # create directory to run panin and panair
     procid = int(multiprocessing.current_process().pid)
     logger.info("calculating case{} with procid {}".format(casenum, procid))
@@ -72,7 +75,7 @@ def run_analysis(casenum, auxname, analysis_dir, params):
 
     # run panin and panair
     mkwgsaux(target_dir=target_dir, **params)
-    run_panin(target_dir, auxname)
+    run_panin(target_dir, aux)
     run_panair(target_dir)
 
     # save results
@@ -85,11 +88,12 @@ def run_analysis(casenum, auxname, analysis_dir, params):
 
 
 if __name__ == '__main__':
-    # initialize
+    # set variables
     N_PROCS = 3
-    wgsname = "ADODG_case3.wgs"
-    auxname = "ADODG_case3.aux"
-    analysis_dir = "" # directory to run analysis (intermediate files will be stored here)
+    AUXNAME = "ADODG_case3.aux"
+    ANALYSIS_DIR = "" # directory to run analysis (intermediate files will be stored here)
+
+    logger.info("start batch analysis")
 
     # read caselist
     caselist = pd.read_csv("caselist.csv")
@@ -100,13 +104,12 @@ if __name__ == '__main__':
             casenum = int(case["casenum"])
             params = case[2:].to_dict()
             if case["run"] == 1:
-                fs.append(executor.submit(run_analysis, casenum, auxname, analysis_dir, params))
+                fs.append(executor.submit(run_analysis, casenum, AUXNAME, ANALYSIS_DIR, params))
             else:
                 logger.debug("skipping case{}".format(casenum))
                 continue
 
     # run analysis
-    for future in futures.as_completed(fs):
-        pass
+    futures.wait(fs, return_when=futures.ALL_COMPLETED)
 
     logger.info("finish batch analysis")
