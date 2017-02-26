@@ -75,10 +75,12 @@ class LaWGS:
         with open(filename, "w") as f:
             f.write(aux)
 
-    def create_stl(self, filename, include_wake=False):
+    def create_stl(self, filename=None, include_wake=False):
         """ convert LaWGS to stl
         quadrilaterals of the Networks are converted to a pair of trilaterals
         """
+        if filename is None:
+            filename = "{}.stl".format(self.name)
         def tri2stl(p0, p1, p2):
             """convert coordinates of a trilateral in to a stl facet"""
             norm_vec = np.cross(p1-p0, p2-p0)
