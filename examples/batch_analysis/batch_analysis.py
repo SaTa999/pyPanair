@@ -70,7 +70,7 @@ def run_analysis(casenum, aux, analysis_dir, params):
     # create directory to run panin and panair
     procid = int(multiprocessing.current_process().pid)
     logger.info("calculating case{} with procid {}".format(casenum, procid))
-    target_dir = os.path.join("panair{}".format(procid))
+    target_dir = os.path.join(analysis_dir, "panair{}".format(procid))
     safe_makedirs(target_dir)
 
     # run panin and panair
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # set variables
     N_PROCS = 3
     AUXNAME = "ADODG_case3.aux"
-    ANALYSIS_DIR = "" # directory to run analysis (intermediate files will be stored here)
+    ANALYSIS_DIR = ""  # directory to run analysis (intermediate files will be stored here)
 
     logger.info("start batch analysis")
 
