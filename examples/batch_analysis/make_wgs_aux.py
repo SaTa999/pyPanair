@@ -9,7 +9,7 @@ from pyPanair.utilities import bspline
 def main(x1, x2, y1, y2, y3, aoas=(7.42), target_dir=""):
     """ create a LaWGS file for twisted rectangular wing
     reference case 3"""
-    wgs = wgs_creator.LaWGS("model for ADODG case3")
+    wgs = wgs_creator.LaWGS("ADODG_case3")
     n_wing_x = 30
     n_wing_y = 30
     n_wing_z = 8
@@ -25,6 +25,7 @@ def main(x1, x2, y1, y2, y3, aoas=(7.42), target_dir=""):
     twist_xy = twist_func(np.linspace(0, 1, 150))
     twist_dist = interp1d(twist_xy[:,0] * halfspan_wing, twist_xy[:,1])
 
+    # create wing
     base_airfoil = wgs_creator.naca4digit("0010", num=n_wing_x, chord=chord_wing)
     wing = list()
     span_pos = np.linspace(0, halfspan_wing, n_wing_y)
@@ -35,6 +36,7 @@ def main(x1, x2, y1, y2, y3, aoas=(7.42), target_dir=""):
     wing = wgs_creator.Network(wing)
     wgs.append_network("wing", wing, 1)
 
+    # create wingtip
     degs = np.linspace(0, -180, n_wing_z)
     wingtipu = base_airfoil.shift((0, halfspan_wing, 0))
     wingtip = [wingtipu.rotx(wingtipu[0], d) for d in degs]

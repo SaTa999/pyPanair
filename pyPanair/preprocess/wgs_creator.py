@@ -47,8 +47,10 @@ class LaWGS:
         with open(filename, "w") as f:
             f.write(wgs)
 
-    def create_aux(self, filename, alpha, mach, cbar, span, sref, xref, zref, wgs_filename=None):
+    def create_aux(self, alpha, mach, cbar, span, sref, xref, zref, filename=None, wgs_filename=None):
         """ create a .aux file (input file for panin) from a LaWGS object"""
+        if filename is None:
+            filename = "{}.aux".format(self.name)
         if wgs_filename is None:
             wgs_filename = "{}.wgs".format(self.name)
         try:
@@ -128,7 +130,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
     :return: LaWGS object
     """
     if wgsname is None:
-        wgsname = filename.replace(".wgs", "")
+            wgsname = filename.replace(".wgs", "")
     lawgs = LaWGS(wgsname)
     with open(filename, "r") as f:
         f.readline() # skip first line

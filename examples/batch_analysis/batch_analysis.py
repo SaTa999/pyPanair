@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from glob import glob
-from logging import getLogger, StreamHandler, FileHandler, Formatter, INFO
+from logging import getLogger, StreamHandler, FileHandler, Formatter, INFO, DEBUG
 import multiprocessing
 import os
 from shutil import copy2, rmtree
@@ -52,9 +52,10 @@ def copy2dir(files, olddir, newdir):
 
 
 def run_analysis(casenum, params):
+    logger.info("calculating case{}".format(casenum))
     # create directory to run panin and panair
     procid = int(multiprocessing.current_process().pid)
-    target_dir = "Z:/panair{}".format(procid)
+    target_dir = "./panair{}".format(procid)
     safe_makedirs(target_dir)
 
     # run panin and panair
@@ -69,8 +70,8 @@ def run_analysis(casenum, params):
 
     # delete intermediate files
     rmtree(target_dir)
-    
     print("test!")
+    return 0
 
 
 if __name__ == '__main__':
@@ -90,23 +91,28 @@ if __name__ == '__main__':
     shandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
     fhandler = FileHandler(filename="panelmethod.log")
     fhandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
-    shandler.setLevel(INFO)
+    shandler.setLevel(DEBUG)
     fhandler.setLevel(INFO)
     logger.setLevel(INFO)
     logger.addHandler(shandler)
     logger.addHandler(fhandler)
     logger.info("start batch analysis")
 
-    # caselistを読み込む
+    # read caselist
     caselist = genfromtxt("caselist.csv", delimiter=',', names=True)
     with futures.ProcessPoolExecutor(max_workers=N_PROCS) as executor:
+        # submit jobs
+        fs = list()
         for case in caselist:
             casenum = int(case["casenum"])
             params = {s: case[s] for s in ("x1", "y1", "x2", "y2", "y3")}
             if case["run"] == 1:
-                logger.info("calculating case{}".format(int(case["casenum"])))
-                executor.submit(run_analysis, casenum, params)
+                fs.append(executor.submit(run_analysis, casenum, params))
             else:
                 logger.debug("skipping case{}".format(casenum))
                 continue
+
+    # run analysis
+    futures.wait(fs)
+
     logger.info("finish batch analysis")
