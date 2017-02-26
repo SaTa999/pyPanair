@@ -7,8 +7,8 @@ A copy of these software can be obtained at [Public Domain Aeronautical Software
 List of things that pyPanair can do (check the examples)
 * Define the geometry of a wing in the LaWGS format (tutorial 1 & 2)
 * Define the geometry of a wing/body configuration in the LaWGS format (tutorial 3)
-* Converts LaWGS format files to stl format (convert_wgs)  
-* Converts agps format files to vtk (legacy Paraview), vtm (multiblock Paraview),
+* Convert LaWGS format files to stl format (convert_wgs)  
+* Convert agps format files to vtk (legacy Paraview), vtm (multiblock Paraview),
  or dat (multiblock Tecplot) format (convert agps)  
 * Calculate the local lift / pitching moment coefficients from agps files (section_force_calculation)
 * Parse ffmf files (convert_ffmf)  
@@ -33,7 +33,6 @@ An [Anaconda3](https://www.continuum.io/) environment is recommended.
 
 ## Example
 Example scripts and files are bundled in the "examples" directory.  
-Run the scripts in each directory to check out how pyPanair works.   
 
 ## Tutorial
-Tutorials of `pyPanair` is included in `examples` directory.
+Tutorials of `pyPanair` are included in `examples` directory.
