@@ -43,16 +43,6 @@ def bspline(cv, degree=3, periodic=False):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-
-    colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
-
-    # cv = np.array([[50., 25.],
-    #                [59., 12.],
-    #                [50., 10.],
-    #                [57., 2.],
-    #                [40., 4.],
-    #                [40., 14.]])
-
     n_cpoints = 4
     sep = 1 / (n_cpoints - 2)
     cv = np.zeros((n_cpoints, 2))

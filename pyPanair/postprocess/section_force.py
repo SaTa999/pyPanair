@@ -11,7 +11,7 @@ def rot(vec, angle, degrees=True):
         angle = np.radians(angle)
     r = np.array([[np.cos(-angle), -np.sin(-angle)],
                   [np.sin(-angle), np.cos(-angle)]])
-    return r @ vec
+    return r.dot(vec)
 
 
 def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):

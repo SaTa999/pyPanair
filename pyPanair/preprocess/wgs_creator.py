@@ -393,7 +393,7 @@ class Line(BasicGeom):
 
     def _rotate(self, rotmat, rotcenter):
         shift_line = Line(self - rotcenter)
-        return Line((rotmat @ shift_line.T).T + rotcenter)
+        return Line((rotmat.rot(shift_line.T)).T + rotcenter)
 
     def split_half(self):
         """ split the Line into two halves and return copies of the halves
