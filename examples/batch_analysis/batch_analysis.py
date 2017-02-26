@@ -12,9 +12,9 @@ from make_wgs_aux import main as mkwgsaux
 # initialize logger
 logger = getLogger(__name__)
 shandler = StreamHandler()
-shandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
+shandler.setFormatter(Formatter("%(name)s %(levelname)s: %(message)s"))
 fhandler = FileHandler(filename="batch_analysis.log")
-fhandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
+fhandler.setFormatter(Formatter("%(name)s %(levelname)s: %(message)s"))
 shandler.setLevel(INFO)
 fhandler.setLevel(INFO)
 logger.setLevel(INFO)
@@ -64,9 +64,9 @@ def copy2dir(files, olddir, newdir):
 
 
 def run_analysis(casenum, auxname, analysis_dir, params):
-    logger.info("calculating case{}".format(casenum))
     # create directory to run panin and panair
     procid = int(multiprocessing.current_process().pid)
+    logger.info("calculating case{} with procid {}".format(casenum, procid))
     target_dir = os.path.join("panair{}".format(procid))
     safe_makedirs(target_dir)
 
