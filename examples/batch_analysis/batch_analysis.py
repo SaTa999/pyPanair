@@ -13,7 +13,7 @@ from make_wgs_aux import main as mkwgsaux
 logger = getLogger(__name__)
 shandler = StreamHandler()
 shandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
-fhandler = FileHandler(filename="panelmethod.log")
+fhandler = FileHandler(filename="batch_analysis.log")
 fhandler.setFormatter(Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s"))
 shandler.setLevel(INFO)
 fhandler.setLevel(INFO)
