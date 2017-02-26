@@ -1,0 +1,39 @@
+ ++ Running A502, version: i00
+ version id = ht2 (12 feb 92) boeing ver i00  
+  real length, integer length, ratio:    8   4   2
+ initialz   cpu time:     0.016
+ input      cpu time:     0.031
+ init       cpu time:     0.031
+ ixtrns called with lth.le.0, irec:    63     0
+ ixtrns called with lth.le.0, irec:    64     0
+ geometry   cpu time:     0.078
+ singular   cpu time:     0.172
+ cntrl pt   cpu time:     0.172
+ bndy cnd   cpu time:     0.188
+ ffgen      cpu time:     0.219
+ TIMING SUMMARY: vin,krn,phi,vel,vsp,near-    0.234375    0.500000    0.390625    0.000000    0.000000    0.890625
+ TIMING SUMMARY: setup,pic-s,block,assy-    0.125000    2.250000    0.312500    0.312500
+ closms on unit 68   header record:   24001      48       1      47
+ closms on unit  4   header record:   24002   32597   32550      47
+  ft04 (pic file) done.  index lth-24001  cp count- 2155  nwv recd- 2156 
+ pic cost   cpu time:     3.250
+ closms on unit 20   header record:      38    2072    2071       1
+ closms on unit 19   header record:      83   17204   17203       1
+ closms on unit  4   header record:   24002   32597   32550      47
+ aic cost   cpu time:     3.531
+ closms on unit 19   header record:      83   17205   17203       1
+  ft19 (l*u) done.  nhdat:      0 250000   2094      2    249     71     
+ 1-st factor done
+ closms on unit 19   header record:      83   17205   17203       1
+ closms on unit 28   header record:      10      19      18       1
+ 1-st solve done
+  direct solution, no iteration performed                                
+  ft09 (singularity file) complete                                       
+ mtrxsoln   cpu time:     5.156
+ pppdq      cpu time:     5.219
+ closms on unit 49   header record:     751     340     338       2
+ closms on unit  4   header record:   24002   32597   32550      47
+ output     cpu time:     5.844
+ closms on unit 24   header record:     202     253     252       1
+ closms on unit 26   header record:     302      43      42       1
+ closms on unit  2   header record:   18001    3865    3829      36

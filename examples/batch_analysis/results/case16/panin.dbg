@@ -1,0 +1,19 @@
+ Debug output from panin on                
+ Reading auxiliary data from ADODG_case3.aux
+ Reading wgs file general title:ADODG_case3 created by wgs_creator
+ Completed reading network:wing
+ Completed reading network:wingtip
+ Completed reading network:wingwake
+ There are            3  networks.
+ Command  1 MACH 0.5
+ Mach=  0.500000000    
+ Command 11 ALPHA 7.42
+ Command  6 cbar 1.0
+ Command  7 span 6.0
+ Command  2 sref 6.0
+ Command  3 xref 0.25
+ Command  5 zref 0.0
+ Command 35 BOUN 1 1 18
+ Net            1    kt=           1
+ Net            2    kt=           1
+ Net            3    kt=          18

@@ -12,9 +12,9 @@ from make_wgs_aux import main as mkwgsaux
 # initialize logger
 logger = getLogger(__name__)
 shandler = StreamHandler()
-shandler.setFormatter(Formatter("%(name)s %(levelname)s: %(message)s"))
+shandler.setFormatter(Formatter("%(asctime)s %(levelname)s: %(message)s"))
 fhandler = FileHandler(filename="batch_analysis.log")
-fhandler.setFormatter(Formatter("%(name)s %(levelname)s: %(message)s"))
+fhandler.setFormatter(Formatter("%(asctime)s %(levelname)s: %(message)s"))
 shandler.setLevel(INFO)
 fhandler.setLevel(INFO)
 logger.setLevel(INFO)
