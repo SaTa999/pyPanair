@@ -49,8 +49,16 @@ class LaWGS:
     def create_aux(self, alpha, mach, cbar, span, sref, xref, zref, additional_params=None, filename=None,
                    wgs_filename=None):
         """ create a .aux file (input file for panin) from a LaWGS object
-        :param alpha: angle of attack of the analysis ()
-        additional_params should be given as a dict (e.g. {"SYMM": 0, "RESTART": 1})
+        :param alpha: angle of attack of the analysis (int, float, or tuple of int/floats)
+        :param mach: mach number of the analysis
+        :param cbar: reference length of model
+        :param span: reference span of model
+        :param sref: reference are of model
+        :param xref: x-coordinate of the moment reference point
+        :param zref: z-coordinate of the moment reference point
+        :param additional_params: dict of additional parameters for panin(e.g. {"SYMM": 0, "RESTART": 1})
+        :param filename: name of the aux file
+        :param wgs_filename: name of the wgs file
         list of params for panin are listed at http://www.pdas.com/panin.htm"""
         if additional_params is None:
             additional_params = dict()
@@ -351,13 +359,29 @@ class Network(BasicGeom):
         return Network([np.dot(rotmat, row.T).T for row in self.shift(-rotcenter)]).shift(rotcenter)
 
     def make_wake(self, edge_number, wake_length):
-        """return a wake Network that starts from a edge of the Network
+        """return a type DW1 wake Network that starts from a edge of the Network
+        use to create wing wakes and body base wakes
         :param edge_number: the edge number that the wake starts from
         :param wake_length: the length of the wake"""
         edge = self.edge(edge_number)
         wake_end = edge.replace(x=wake_length)
         wake = Network((edge, wake_end))
         wake = wake.trans()
+        return wake
+
+    def make_bodywingwake(self, edge_number, wake_length):
+        """return a type DW2 wake Network that starts from a edge of the Network
+        use to create body-wing network
+        :param edge_number: the edge number that the wake starts from
+        :param wake_length: the length of the wake"""
+        edge = self.edge(edge_number)
+        if edge[0, 0] > edge[-1, 0]:
+            edge = edge.flip()
+        edge_end_point = Point(edge[-1])
+        wake_end_point = edge_end_point.replace(x=wake_length)
+        wake_line1 = Line(np.append(edge, np.atleast_2d(wake_end_point), axis=0))
+        wake_line2 = wake_line1.replace(y=edge[0, 1], z=edge[0, 2])
+        wake = Network((wake_line1, wake_line2))
         return wake
 
 
