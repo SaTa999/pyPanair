@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from warnings import warn
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, proj3d
 from matplotlib.patches import FancyArrowPatch
@@ -48,6 +49,7 @@ class LaWGS:
     def create_aux(self, alpha, mach, cbar, span, sref, xref, zref, additional_params=None, filename=None,
                    wgs_filename=None):
         """ create a .aux file (input file for panin) from a LaWGS object
+        :param alpha: angle of attack of the analysis ()
         additional_params should be given as a dict (e.g. {"SYMM": 0, "RESTART": 1})
         list of params for panin are listed at http://www.pdas.com/panin.htm"""
         if additional_params is None:
@@ -57,10 +59,23 @@ class LaWGS:
         if wgs_filename is None:
             wgs_filename = "{}.wgs".format(self.name)
         try:
+            alpc = (max(alpha) - min(alpha)) / 2
+            if len(alpha) > 4:
+                raise ValueError("number of cases (i.e. AoAs) should not exceed 4")
+            # check difference between alpc and AoAs
+            if mach < 1:
+                tol = 5
+            else:
+                tol = 2
+            alpha_check = (abs(a - alpc) > tol for a in alpha)
+            if any(alpha_check):
+                warn("""ALPC (direction for compressibility effects) is {} [deg]
+                        This is not be suitable for the AoAs: {}
+                        (The difference between the maximum AoA & minimum AoA is too large)""".format(alpc, alpha))
             alpha = " ".join(map(str, alpha))
         except TypeError:
             if type(alpha) in (int, float):
-                pass
+                alpc = alpha
             else:
                 raise
         boun = " ".join(map(str, self._boundary_types))
@@ -68,6 +83,7 @@ class LaWGS:
                "WGS {}".format(wgs_filename),
                "MACH {}".format(mach),
                "ALPHA {}".format(alpha),
+               "ALPC {}".format(alpc),
                "CBAR {}".format(cbar),
                "SPAN {}".format(span),
                "SREF {}".format(sref),
