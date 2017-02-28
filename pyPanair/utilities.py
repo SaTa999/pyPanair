@@ -6,7 +6,7 @@ from scipy.interpolate import splev
 def bspline(cv, degree=3, periodic=False):
     """ return a function that defines a bezier spline
         cv :      an array of control points
-        degree:   degree of the polynominal curve
+        degree:   degree of the polynomial curve
         periodic: True - closed curve
                   False - open curve
         adopted from http://stackoverflow.com/a/35007804
