@@ -43,12 +43,6 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
             line = line[:-1]  # omit the last point in the line if it has the same xyz-coordinates as the first point
         y = float(line[0, span_id])  # coordinate of spanwise position
         line_clip = line[:, [chord_id, height_id]]  # coordinate of cross section
-        diff_coord = line_clip - np.roll(line_clip, 1, axis=0)
-        length = np.linalg.norm(diff_coord, axis=1)  # length between each vertex
-        norm = np.fliplr(diff_coord / length[:, np.newaxis])  # norm vector between each vertex
-        min_id = np.argmin(line_clip, axis=0)  # vertex_id with the minimum coordinate
-        flip = np.array([-1 if col[i] < 0 else 1 for (col, i) in zip(norm.T, min_id)])
-        norm *= flip  # flip the norm vectors to make them point inward
         chord = np.max(line_clip[:, 0]) - np.min(line_clip[:, 0])
 
         # local coefficients are nan if chord is 0
@@ -56,6 +50,13 @@ def calc_section_force(aoa, mac, rot_center, casenum=1, networknum=1):
             nan = float("nan")
             result.append([y, chord, nan, nan, nan])
             continue
+
+        diff_coord = line_clip - np.roll(line_clip, 1, axis=0)
+        length = np.linalg.norm(diff_coord, axis=1)  # length between each vertex
+        norm = np.fliplr(diff_coord / length[:, np.newaxis])  # norm vector between each vertex
+        min_id = np.argmin(line_clip, axis=0)  # vertex_id with the minimum coordinate
+        flip = np.array([-1 if col[i] < 0 else 1 for (col, i) in zip(norm.T, min_id)])
+        norm *= flip  # flip the norm vectors to make them point inward
 
         coeff_all = [y, chord]
         # the definition of each variable is explained in the reference
