@@ -69,9 +69,13 @@ class LaWGS:
                 tol = 2
             alpha_check = (abs(a - alpc) > tol for a in alpha)
             if any(alpha_check):
-                warn("""ALPC (direction for compressibility effects) is {} [deg]
-                        This is not be suitable for the AoAs: {}
-                        (The difference between the maximum AoA & minimum AoA is too large)""".format(alpc, alpha))
+                warn_messege = "".join((
+                    "\n",
+                    "ALPC (direction for compressibility effects) is {} [deg]\n".format(alpc),
+                    "This is not be suitable for the AoAs: {}\n".format(alpha),
+                    "(The difference between the maximum AoA & minimum AoA is too large)"
+                ))
+                warn(warn_messege)
             alpha = " ".join(map(str, alpha))
         except TypeError:
             if type(alpha) in (int, float):
