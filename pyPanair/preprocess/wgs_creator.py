@@ -57,9 +57,10 @@ class LaWGS:
         :param xref: x-coordinate of the moment reference point
         :param zref: z-coordinate of the moment reference point
         :param additional_params: dict of additional parameters for panin(e.g. {"SYMM": 0, "RESTART": 1})
+                                  list of params for panin are listed at http://www.pdas.com/panin.htm
         :param filename: name of the aux file
         :param wgs_filename: name of the wgs file
-        list of params for panin are listed at http://www.pdas.com/panin.htm"""
+        """
         if additional_params is None:
             additional_params = dict()
         if filename is None:
