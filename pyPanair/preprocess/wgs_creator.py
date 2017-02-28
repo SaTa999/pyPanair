@@ -67,10 +67,15 @@ class LaWGS:
             filename = "{}.aux".format(self.name)
         if wgs_filename is None:
             wgs_filename = "{}.wgs".format(self.name)
-        try:
+        if type(alpha) in (int, float):
+            alpc = alpha
+        elif len(alpha) == 1:
+            alpha = alpha[0]
+            alpc = alpha
+        elif len(alpha) > 4:
+            raise ValueError("number of cases (i.e. AoAs) should not exceed 4")
+        else:
             alpc = (max(alpha) - min(alpha)) / 2
-            if len(alpha) > 4:
-                raise ValueError("number of cases (i.e. AoAs) should not exceed 4")
             # check difference between alpc and AoAs
             if mach < 1:
                 tol = 5
@@ -86,11 +91,6 @@ class LaWGS:
                 ))
                 warn(warn_messege)
             alpha = " ".join(map(str, alpha))
-        except TypeError:
-            if type(alpha) in (int, float):
-                alpc = alpha
-            else:
-                raise
         boun = " ".join(map(str, self._boundary_types))
         aux = ["// Auxiliary files for {}".format(self.name),
                "WGS {}".format(wgs_filename),
