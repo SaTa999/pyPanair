@@ -142,7 +142,7 @@ class LaWGS:
             """ shape of quadrilateral: p0 --- p2
                                         |      |
                                         p1 --- p3"""
-            if boun not in (18, 19, 20) or include_wake:
+            if boun not in (-18, 18, 19, 20) or include_wake:
                 m = (net.shape[0] - 1) * (net.shape[1] - 1)
                 p0 = net[:-1, :-1].reshape((m, 3))
                 p1 = net[1:, :-1].reshape((m, 3))
