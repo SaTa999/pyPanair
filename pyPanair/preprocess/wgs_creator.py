@@ -5,8 +5,6 @@ from matplotlib.patches import FancyArrowPatch
 import numpy as np
 import pandas as pd
 
-from pyPanair.utilities import bspline
-
 
 class LaWGS:
     """ A class that defines a geometry in the Langley Wireframe Geometry Standard (LaWGS) format
@@ -81,10 +79,11 @@ class LaWGS:
         """
         if filename is None:
             filename = "{}.stl".format(self.name)
+
         def tri2stl(p0, p1, p2):
             """convert coordinates of a trilateral in to a stl facet"""
-            norm_vec = np.cross(p1-p0, p2-p0)
-            stl =  "facet normal {0} {1} {2}\n".format(*norm_vec)
+            norm_vec = np.cross(p1 - p0, p2 - p0)
+            stl = "facet normal {0} {1} {2}\n".format(*norm_vec)
             stl += " outer loop\n"
             stl += "  vertex {0} {1} {2}\n".format(*p0)
             stl += "  vertex {0} {1} {2}\n".format(*p1)
@@ -107,13 +106,13 @@ class LaWGS:
             """ shape of quadrilateral: p0 --- p2
                                         |      |
                                         p1 --- p3"""
-            if not boun in (18, 19, 20) or include_wake:
+            if boun not in (18, 19, 20) or include_wake:
                 m = (net.shape[0] - 1) * (net.shape[1] - 1)
-                p0 = net[:-1,:-1].reshape((m, 3))
-                p1 = net[1:,:-1].reshape((m, 3))
-                p2 = net[:-1,1:].reshape((m, 3))
-                p3 = net[1:,1:].reshape((m, 3))
-                stl = (quad2stl(*pnts)  for pnts in zip(p0,p1,p2,p3))
+                p0 = net[:-1, :-1].reshape((m, 3))
+                p1 = net[1:, :-1].reshape((m, 3))
+                p2 = net[:-1, 1:].reshape((m, 3))
+                p3 = net[1:, 1:].reshape((m, 3))
+                stl = (quad2stl(*pnts) for pnts in zip(p0, p1, p2, p3))
                 stl = "".join(stl)
                 stl_all += stl
         stl_all += "endsolid {}\n".format(self.name)
@@ -121,25 +120,25 @@ class LaWGS:
             f.write(stl_all)
 
     def count_total_panels(self):
-        return np.sum(((net.shape[0]-1)*(net.shape[1]-1) for net in self._networks))
+        return np.sum(((net.shape[0] - 1) * (net.shape[1] - 1) for net in self._networks))
 
 
 def read_wgs(filename, wgsname=None, boun_cond=None):
     """ read a LaWGS file and create a LaWGS object
     :param filename: filename of the LaWGS file
     :param wgsname: "name" for the LaWGS object
-    :param bonu_cond: a tuple containing the boundary conditions of each network
+    :param boun_cond: a tuple containing the boundary conditions of each network
     :return: LaWGS object
     """
     if wgsname is None:
-            wgsname = filename.replace(".wgs", "")
+        wgsname = filename.replace(".wgs", "")
     lawgs = LaWGS(wgsname)
     with open(filename, "r") as f:
-        f.readline() # skip first line
+        f.readline()  # skip first line
         net_id = 0
         while True:
             net_id += 1
-            netname = f.readline().split() # parse the name of the network
+            netname = f.readline().split()  # parse the name of the network
             if not netname:
                 break
             # parse the header of the network
@@ -153,12 +152,12 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
                 line = f.readline().split()
                 coords += line
                 cnt += len(line)
-                if cnt == n_total_pnts: # break after reading all the points in the network
+                if cnt == n_total_pnts:  # break after reading all the points in the network
                     break
             network = Network(np.array(coords, dtype=float).reshape((n_line, n_pnt, 3)))
             # set boundary conditions if they are given
             if boun_cond:
-                boun = boun_cond[net_id-1]
+                boun = boun_cond[net_id - 1]
             else:
                 boun = 1
             lawgs.append_network(netname, network, boun)
@@ -186,7 +185,7 @@ class BasicGeom(np.ndarray):
         rotcenter = Point(rotcenter)
         if degrees:
             angle = np.radians(angle)
-        if axis =="x":
+        if axis == "x":
             rotmat = np.array([[1, 0, 0],
                                [0, np.cos(angle), -np.sin(angle)],
                                [0, np.sin(angle), np.cos(angle)]])
@@ -216,7 +215,7 @@ class Network(BasicGeom):
     """ A class that represents a 3 dimensional network which is composed of Lines
     coordinate data is stored in a numpy.ndarray with a shape of (n_lines, n_points, 3)
     """
-    _base_shape = (1,1,3)
+    _base_shape = (1, 1, 3)
 
     def __new__(cls, input_network):
         obj = np.asarray(input_network, dtype=float).view(cls)
@@ -247,7 +246,7 @@ class Network(BasicGeom):
 
     def network2wgs(self):
         return "\n".join(("\n".join((" ".join(map("{:.7e}".format, point))
-                          for point in line)) for line in self)) + "\n"
+                                     for point in line)) for line in self)) + "\n"
 
     def concat_row(self, networks):
         """ join edge2 and edge4 of self and input networks
@@ -284,15 +283,15 @@ class Network(BasicGeom):
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_aspect("equal")
-        X, Y, Z = (self[:, :, i] for i in range(3))
-        ax.plot_wireframe(X, Y, Z)
+        x, y, z = (self[:, :, i] for i in range(3))
+        ax.plot_wireframe(x, y, z)
         # place invisible markers to set the aspect ratio of each axis to be equal
-        max_range = np.array([X.max() - X.min(), Y.max() - Y.min(), Z.max() - Z.min()]).max()
-        Xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].ravel() + 0.5 * (X.max() + X.min())
-        Yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].ravel() + 0.5 * (Y.max() + Y.min())
-        Zb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].ravel() + 0.5 * (Z.max() + Z.min())
-        for xb, yb, zb in zip(Xb, Yb, Zb):
-            ax.plot([xb], [yb], [zb], 'w')
+        max_range = np.array([x.max() - x.min(), y.max() - y.min(), z.max() - z.min()]).max()
+        xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].ravel() + 0.5 * (x.max() + x.min())
+        yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].ravel() + 0.5 * (y.max() + y.min())
+        zb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].ravel() + 0.5 * (z.max() + z.min())
+        for xxb, yyb, zzb in zip(xb, yb, zb):
+            ax.plot([xxb], [yyb], [zzb], 'w')
         ax.set_xlabel("$x$", fontsize=16)
         ax.set_ylabel("$y$", fontsize=16)
         ax.set_zlabel("$z$", fontsize=16)
@@ -339,7 +338,7 @@ class Line(BasicGeom):
     """ A class that represents a 3 dimensional line which is composed of Points
     coordinate data is stored in a numpy.ndarray with a shape of (n_points, 3)
     """
-    _base_shape = (1,3)
+    _base_shape = (1, 3)
 
     def __new__(cls, input_line):
         obj = np.asarray(input_line, dtype=float).view(cls)
@@ -402,9 +401,10 @@ class Line(BasicGeom):
     def split_half(self):
         """ split the Line into two halves and return copies of the halves
         useful when splitting an airfoil into upper and lower Lines"""
-        first_half = Line(np.array(self[:self.shape[0]//2+1]))
-        second_half = Line(np.array(self[self.shape[0]//2:]))
+        first_half = Line(np.array(self[:self.shape[0] // 2 + 1]))
+        second_half = Line(np.array(self[self.shape[0] // 2:]))
         return first_half, second_half
+
 
 def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     """ read the coordinates of a airfoil from a csv file and create Line from it
@@ -430,19 +430,22 @@ def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     xlow = afoil["xlow"].values
     zlow = afoil["zlow"].values
     n_pnts = xup.shape[0]
-    afoil_Line = np.ones((n_pnts*2-1,3))
-    afoil_Line[:, 1] *= span_pos
-    afoil_Line[:n_pnts, 0] = xup
-    afoil_Line[:n_pnts, 2] = zup
-    afoil_Line[n_pnts:, 0] = xlow[1:]
-    afoil_Line[n_pnts:, 2] = zlow[1:]
-    afoil_Line[:, [0,2]] *= expansion_ratio
-    return Line(afoil_Line)
+    afoil_line = np.ones((n_pnts * 2 - 1, 3))
+    afoil_line[:, 1] *= span_pos
+    afoil_line[:n_pnts, 0] = xup
+    afoil_line[:n_pnts, 2] = zup
+    afoil_line[n_pnts:, 0] = xlow[1:]
+    afoil_line[n_pnts:, 2] = zlow[1:]
+    afoil_line[:, [0, 2]] *= expansion_ratio
+    return Line(afoil_line)
 
 
-def naca4digit(digits, num = 25, chord=1., span_pos=0.):
+def naca4digit(digits, num=25, chord=1., span_pos=0.):
     """ create a Line of a naca 4 digit airfoil
     :param digits: the 4 digits that specify the airfoil (e.g. 2412)
+    :param num: number of points for upper and lower surfaces
+    :param chord: chord length of airfoil
+    :param span_pos: y-coordinate of the Line
     """
     digits = str(digits)
     if len(digits) != 4:
@@ -456,7 +459,8 @@ def naca4digit(digits, num = 25, chord=1., span_pos=0.):
     a3 = 0.2843
     a4 = -0.1036  # originally -0.1015, but -0.1036 for sharp edge
     x = cosspace(0, 1, num)
-    zt = 5 * t * (a0 * (x ** 0.5) + a1 * x + a2 * (x ** 2) + a3 * (x ** 3) + a4 * (x ** 4)) # thickness
+    zt = 5 * t * (a0 * (x ** 0.5) + a1 * x + a2 * (x ** 2) + a3 * (x ** 3) + a4 * (x ** 4))  # thickness
+
     def camber_gradient(xi, p):
         if 0 <= xi < p:
             zc = (m / (p ** 2)) * (2 * p * xi - xi ** 2)  # camber
@@ -465,6 +469,7 @@ def naca4digit(digits, num = 25, chord=1., span_pos=0.):
             zc = (m / ((1 - p) ** 2)) * (1 - 2 * p + 2 * p * xi - xi ** 2)  # camber
             grad_zc = (2 * m / ((1 - p) ** 2)) * (p - xi)  # gradient
         return zc, grad_zc
+
     vfunc = np.vectorize(camber_gradient)
     zc, grad_zc = vfunc(x, p)
     theta = np.arctan(grad_zc)
@@ -477,13 +482,13 @@ def naca4digit(digits, num = 25, chord=1., span_pos=0.):
     # modify the zup & zlow to make the thickness 0 at the TE
     zup[0] = 0.
     zlow[-1] = 0.
-    afoil_Line = np.ones((num*2-1,3))
-    afoil_Line *= span_pos
-    afoil_Line[:num, 0] = xup
-    afoil_Line[:num, 2] = zup
-    afoil_Line[num:, 0] = xlow[1:]
-    afoil_Line[num:, 2] = zlow[1:]
-    return Line(afoil_Line)
+    afoil_line = np.ones((num * 2 - 1, 3))
+    afoil_line *= span_pos
+    afoil_line[:num, 0] = xup
+    afoil_line[:num, 2] = zup
+    afoil_line[num:, 0] = xlow[1:]
+    afoil_line[num:, 2] = zlow[1:]
+    return Line(afoil_line)
 
 
 class Point(BasicGeom):
@@ -556,6 +561,7 @@ def cosspace(start, stop, num, **kwargs):
 
 class Arrow3D(FancyArrowPatch):
     """a class for drawing a 3D arrow"""
+
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
         self._verts3d = xs, ys, zs
