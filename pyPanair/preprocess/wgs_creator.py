@@ -406,13 +406,13 @@ class Line(BasicGeom):
         return first_half, second_half
 
 
-def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
+def read_airfoil(filename, y_coordinate=0., expansion_ratio=1.):
     """ read the coordinates of a airfoil from a csv file and create Line from it
     see the examples "naca2412.csv" and "rae2822.csv" in the examples directory
     upper and lower surfaces must have the same number of points
     first and last points of the upper and lower surfaces must coincide
     :param filename: name of the csv file
-    :param span_pos: the y-axis coordinate will be set at span_pos
+    :param y_coordinate: the y-axis coordinate of the line
     :param expansion_ratio: the chord length and thickness (i.e. x,z-axis coordinates) will be multiplied by this ratio
     """
     afoil = pd.read_csv(filename)
@@ -431,7 +431,7 @@ def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     zlow = afoil["zlow"].values
     n_pnts = xup.shape[0]
     afoil_line = np.ones((n_pnts * 2 - 1, 3))
-    afoil_line[:, 1] *= span_pos
+    afoil_line[:, 1] *= y_coordinate
     afoil_line[:n_pnts, 0] = xup
     afoil_line[:n_pnts, 2] = zup
     afoil_line[n_pnts:, 0] = xlow[1:]
@@ -440,12 +440,12 @@ def read_airfoil(filename, span_pos=0., expansion_ratio=1.):
     return Line(afoil_line)
 
 
-def naca4digit(digits, num=25, chord=1., span_pos=0.):
+def naca4digit(digits, num=25, chord=1., y_coordinate=0.):
     """ create a Line of a naca 4 digit airfoil
     :param digits: the 4 digits that specify the airfoil (e.g. 2412)
     :param num: number of points for upper and lower surfaces
     :param chord: chord length of airfoil
-    :param span_pos: y-coordinate of the Line
+    :param y_coordinate: y-coordinate of the Line
     """
     digits = str(digits)
     if len(digits) != 4:
@@ -483,7 +483,7 @@ def naca4digit(digits, num=25, chord=1., span_pos=0.):
     zup[0] = 0.
     zlow[-1] = 0.
     afoil_line = np.ones((num * 2 - 1, 3))
-    afoil_line *= span_pos
+    afoil_line *= y_coordinate
     afoil_line[:num, 0] = xup
     afoil_line[:num, 2] = zup
     afoil_line[num:, 0] = xlow[1:]

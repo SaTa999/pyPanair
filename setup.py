@@ -12,6 +12,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
+
 def check_dependencies():
     install_requires = []
     try:
@@ -32,23 +33,23 @@ def check_dependencies():
         install_requires.append('pandas')
     return install_requires
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     install_requires = check_dependencies()
 
     setup(name=DISTNAME,
-        author=MAINTAINER,
-        maintainer=MAINTAINER,
-        description=DESCRIPTION,
-        license=LICENSE,
-        version=VERSION,
-        download_url=DOWNLOAD_URL,
-        install_requires=install_requires,
-        packages=['pyPanair', 'pyPanair.preprocess', 'pyPanair.postprocess'],
-        classifiers=[
-                     'Intended Audience :: Science/Research',
-                     'Programming Language :: Python :: 3.6',
-                     'License :: OSI Approved :: MIT License',
-                     'Topic :: Scientific/Engineering',
-                     'Operating System :: Microsoft :: Windows'],
+          author=MAINTAINER,
+          maintainer=MAINTAINER,
+          description=DESCRIPTION,
+          license=LICENSE,
+          version=VERSION,
+          download_url=DOWNLOAD_URL,
+          install_requires=install_requires,
+          packages=['pyPanair', 'pyPanair.preprocess', 'pyPanair.postprocess'],
+          classifiers=[
+              'Intended Audience :: Science/Research',
+              'Programming Language :: Python :: 3.6',
+              'License :: OSI Approved :: MIT License',
+              'Topic :: Scientific/Engineering',
+              'Operating System :: Microsoft :: Windows'],
           )
