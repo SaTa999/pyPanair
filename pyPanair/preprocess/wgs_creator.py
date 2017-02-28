@@ -45,8 +45,13 @@ class LaWGS:
         with open(filename, "w") as f:
             f.write(wgs)
 
-    def create_aux(self, alpha, mach, cbar, span, sref, xref, zref, filename=None, wgs_filename=None):
-        """ create a .aux file (input file for panin) from a LaWGS object"""
+    def create_aux(self, alpha, mach, cbar, span, sref, xref, zref, additional_params=None, filename=None,
+                   wgs_filename=None):
+        """ create a .aux file (input file for panin) from a LaWGS object
+        additional_params should be given as a dict (e.g. {"SYMM": 0, "RESTART": 1})
+        list of params for panin are listed at http://www.pdas.com/panin.htm"""
+        if additional_params is None:
+            additional_params = dict()
         if filename is None:
             filename = "{}.aux".format(self.name)
         if wgs_filename is None:
@@ -63,12 +68,14 @@ class LaWGS:
                "WGS {}".format(wgs_filename),
                "MACH {}".format(mach),
                "ALPHA {}".format(alpha),
-               "cbar {}".format(cbar),
-               "span {}".format(span),
-               "sref {}".format(sref),
-               "xref {}".format(xref),
-               "zref {}".format(zref),
+               "CBAR {}".format(cbar),
+               "SPAN {}".format(span),
+               "SREF {}".format(sref),
+               "XREF {}".format(xref),
+               "ZREF {}".format(zref),
                "BOUN {}".format(boun)]
+        for k, v in additional_params.items():
+            aux.append("{} {}".format(k, v))
         aux = "\n".join(aux)
         with open(filename, "w") as f:
             f.write(aux)
