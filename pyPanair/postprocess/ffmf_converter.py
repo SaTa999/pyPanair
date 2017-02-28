@@ -9,15 +9,13 @@ def read_ffmf(inpfilepath="ffmf"):
     with open(inpfilepath, "r") as f:
         for i in range(30):  # force/torque coefficients are listed in the first 30 rows
             line = f.readline().split()
-            if line:
+            if not line:
                 pass
             # read force / torque coefficients
             elif line[0] == str(sol_num):
                 sol_num += 1
                 line2 = f.readline().split()
                 ffmf.append(line + line2)
-            else:
-                pass
     ffmf = pd.DataFrame(ffmf, columns=columns)
     return ffmf
 
