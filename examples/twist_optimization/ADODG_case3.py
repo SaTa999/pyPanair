@@ -24,7 +24,10 @@ def main(twist_func, aoas=(7.42), target_dir=""):
     wing = list()
     span_pos = np.linspace(0, halfspan_wing, n_wing_y)
     for y in span_pos:
-        rot_foil = base_airfoil.roty(base_airfoil[0], twist_dist(y))
+        twist = twist_dist(y)
+        rot_foil = base_airfoil.roty(base_airfoil[0], twist)
+        local_chord = np.max(rot_foil[:,0]) - np.min(rot_foil[:,0])
+        rot_foil *= chord_wing / local_chord
         rot_foil.shift((0, y, 0), inplace=True)
         wing.append(rot_foil)
     wing = wgs_creator.Network(wing)
@@ -32,10 +35,15 @@ def main(twist_func, aoas=(7.42), target_dir=""):
 
     # create wingtip
     degs = np.linspace(0, -180, n_wing_z)
-    wingtipu, _ = base_airfoil.shift((0, halfspan_wing, 0)).split_half()
+    wingtipu, _ = base_airfoil.shift((0, 0, 0)).split_half()
     wingtip = [wingtipu.rotx(wingtipu[0], d) for d in degs]
     wingtip = wgs_creator.Network(wingtip)
+    twist = twist_dist(y)
     wingtip = wingtip.roty(wingtipu[0], twist_dist(halfspan_wing))
+    local_chord = np.max(wingtip[0,:,0]) - np.min(wingtip[0,:,0])
+    wingtip *= chord_wing / local_chord
+    wingtip.shift((0, halfspan_wing, 0), inplace=True)
+
     wgs.append_network("wingtip", wingtip, 1)
 
     # add wake
