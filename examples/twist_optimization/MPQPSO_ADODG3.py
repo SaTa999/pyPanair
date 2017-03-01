@@ -10,6 +10,7 @@ from concurrent import futures
 import multiprocessing
 from logging import getLogger, StreamHandler, FileHandler, Formatter, INFO
 import os
+import shutil
 
 from ADODG_case3 import main as adc3
 import clean_rwms
@@ -88,76 +89,120 @@ def updateParticle2(part, best, meanbest, beta):
     return part
 
 
+def sort_cp(part):
+    col = (part.shape[0] - 1) // 2
+    tmp = part[:-1].reshape(2, col)
+    tmp[:] = tmp[:, tmp[0,:].argsort()]
+    part[:-1] = tmp.ravel()
+
+
+def run_panin(directory):
+    process = Popen("panin", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=directory)
+    (stdout, stderr) = process.communicate(b"ADODG_case3.aux")
+    if stderr:
+        logger.error(stderr)
+    else:
+        logger.debug(stdout)
+
+def run_panair(directory):
+    process = Popen("panair", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=target_dir)
+    (stdout, stderr) = process.communicate(b"a502.in")
+    if stderr:
+        logger.error(stderr)
+    else:
+        logger.debug(stdout)
+
+
 def evaluate(part):
     procid = int(multiprocessing.current_process().pid)
     target_dir = "panair{}".format(procid)
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
+    aoa_low = 0
+    aoa_high = 10
+    target_cl = 37.5
+    auxpath = "{}/ADODG_case3.aux".format(target_dir)
+    ffmfpath = "{}/ffmf".format(target_dir)
 
-    # define twist func
-    cv = np.zeros((4, 2))
-    cv[1, :] = part[:2]
-    cv[2, :] = part[2:4]
-    cv[-1,0] = 1
-    cv[-1,1] = part[-1]
-    twist_func = bspline(cv, degree=3, periodic=False)
-    aoa_low = 2
-    aoa_high = 8
-    adc3(twist_func, aoas=(aoa_low, aoa_high), target_dir=target_dir)
-    # run panin
-    process = Popen("panin", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=target_dir)
-    (stdout, stderr) = process.communicate(b"ADODG_case3.aux")
-    if stderr:
-        logger.error(stderr)
-    else:
-        logger.debug(stdout)
+    nan = (float("nan"), )
+
+    # define twist func and create aux & wgs
+    n_cp = (part.shape[0] - 1) // 2
+    cv = np.zeros((2, n_cp+2))
+    cv[:, 1:-1] = part[:-1].reshape(2, n_cp)
+    cv[0, -1] = 1
+    cv[1, -1] = part[-1]
+    twist_func = bspline(cv.T, degree=3, periodic=False)
+    adc3(twist_func, aoas=aoa_low, target_dir=target_dir)
 
     # run panair
-    process = Popen("panair", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=target_dir)
-    (stdout, stderr) = process.communicate(b"a502.in")
-    if stderr:
-        logger.error(stderr)
-    else:
-        logger.debug(stdout)
+    run_panin(target_dir)
+    run_panair(target_dir)
 
-    # calc target aoa (CL=0.375)
-    ffmf = read_ffmf("{}/ffmf".format(target_dir))
-    cllow = float(ffmf.cl[0])
-    clhigh = float(ffmf.cl[1])
-    cla = (clhigh - cllow) / (aoa_high - aoa_low)
-    cl0 = clhigh - aoa_high * cla
-    target_alpha = (37.5 - cl0) / cla
-    clean_rwms.main(target_dir)
+    # read ffmf for aoa_low
+    try:
+        ffmf = read_ffmf(ffmfpath)
+        cllow = float(ffmf.cl[0])
+    except FileNotFoundError:
+        return nan
 
     # modify aux file
-    with open("{}/ADODG_case3.aux".format(target_dir), "r") as f:
+    with open(auxpath, "r") as f:
         aux = f.readlines()
-        aux[3] = "ALPHA {}\n".format(target_alpha)
+        aux[3] = "ALPHA {}\n".format(aoa_high)
+        aux[4] = "ALPC {}\n".format(aoa_high)
         aux = "".join(aux)
-    with open("{}/ADODG_case3.aux".format(target_dir), "w") as f:
+    with open(auxpath, "w") as f:
         f.write(aux)
 
-    # run panin & panair for target_alpha
-    process = Popen("panin", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=target_dir)
-    (stdout, stderr) = process.communicate(b"ADODG_case3.aux")
-    if stderr:
-        logger.error(stderr)
-    else:
-        logger.debug(stdout)
-    process = Popen("panair", stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=target_dir)
-    (stdout, stderr) = process.communicate(b"a502.in")
-    if stderr:
-        logger.error(stderr)
-    else:
-        logger.debug(stdout)
+    # clean directory
     clean_rwms.main(target_dir)
+    os.remove(ffmfpath)
 
-    # evaluate cl & cdi at target_alpha
-    ffmf = read_ffmf("{}/ffmf".format(target_dir))
+    # run panair
+    run_panin(target_dir)
+    run_panair(target_dir)
+
+    # read ffmf for aoa_low
+    try:
+        ffmf = read_ffmf(ffmfpath)
+        clhigh = float(ffmf.cl[0])
+    except FileNotFoundError:
+        return nan
+
+    # calc target aoa (CL=0.375)
+    cla = (clhigh - cllow) / (aoa_high - aoa_low)
+    cl0 = cllow - aoa_low * cla
+    target_alpha = (target_cl - cl0) / cla
+
+    # modify aux file
+    with open(auxpath, "r") as f:
+        aux = f.readlines()
+        aux[3] = "ALPHA {}\n".format(target_alpha)
+        aux[4] = "ALPC {}\n".format(target_alpha)
+        aux = "".join(aux)
+    with open(auxpath, "w") as f:
+        f.write(aux)
+
+    # clean directory
+    clean_rwms.main(target_dir)
+    os.remove(ffmfpath)
+
+    # run panair
+    run_panin(target_dir)
+    run_panair(target_dir)
+
+    try:
+        ffmf = read_ffmf(ffmfpath)
+    except FileNotFoundError:
+        return nan
     cl = float(ffmf.cl)
     cdi = float(ffmf.cdi)
+
+    shutil.rmtree(target_dir)
+
     if cl < 37.5:
-        return (float("nan"), )
+        return nan
     else:
         return (cdi, )
 
@@ -177,11 +222,12 @@ logger.addHandler(fhandler)
 if __name__ == '__main__':
     logger.info("started program")
     N_PROCS = 10
-    NDV = 5 # number of design variables
-    NPOP = 50 # number of particles (more than 3 to 4 times the number of design variables)
+    NCP = 4  # number of control points
+    NDV = NCP * 2 + 1 # number of design variables
+    NPOP = 100 # number of particles (more than 3 to 4 times the number of design variables)
     GEN = 200 # number of maximum generations
-    LOWER = np.array((0, -5, 0.5, -5, -5))  # lower bound of particle position x1 y1 x2 y2 y3
-    UPPER = np.array((0.5, 5, 1., 5, 5))  # upper bound of particle position
+    LOWER = np.array((0., ) * NCP + (-10., ) * (NCP + 1))  # lower bound of particle position x1 x2 x3 x4 y1 y2 y3 y4 y5
+    UPPER = np.array((1., ) * NCP + (5., ) * (NCP + 1))  # upper bound of particle position
     FITNESS_WEIGHTS = (-1.0,) # maximize:(1.0,), minimize:(-1.0,), don't forget the comma!
     BETA_INIT = 1.0 # initial value of contraction-expansion coefficient
     BETA_FIN = 0.5 # final value of contraction-expansion coefficient
@@ -225,6 +271,9 @@ if __name__ == '__main__':
         for g, beta in zip(list(range(GEN)), betas):
             meanbest[:] = 0. # reinitialize the meanbest
             INVALID = 0
+            # sort the x-coordinates of the contril points
+            for part in pop:
+                sort_cp(part)
 
             # MP region
             mappings = {executor.submit(evaluate, np.array(part)): i for (i, part) in enumerate(pop)}
@@ -241,7 +290,7 @@ if __name__ == '__main__':
                 if part.best is None:
                     while np.isnan(part.fitness.values):
                         part[:] = toolbox.particle()
-                        part.fitness.values = toolbox.evaluate(part)
+                        part.fitness.values = evaluate(part)
                 # update the particle's best position
                 if part.best is None or part.best.fitness < part.fitness:
                     part.best = creator.Particle(part)
