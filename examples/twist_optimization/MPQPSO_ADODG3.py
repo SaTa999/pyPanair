@@ -122,7 +122,7 @@ def evaluate(part):
         os.mkdir(target_dir)
     aoa_low = 0
     aoa_high = 10
-    target_cl = 37.5
+    target_cl = 37.5  # the reference area is 100 times the actual value
     auxpath = "{}/ADODG_case3.aux".format(target_dir)
     ffmfpath = "{}/ffmf".format(target_dir)
 
@@ -313,6 +313,8 @@ if __name__ == '__main__':
                            invalid=INVALID, **stats.compile(pop))
             if LOG:
                 print(logbook.stream)
+                with open("best.log", "ab") as f:
+                    np.savetxt(f, best[np.newaxis])
             logger.info("end of generation {}".format(g))
 
     print("end of global optimization")
