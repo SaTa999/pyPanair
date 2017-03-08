@@ -173,7 +173,7 @@ def read_wgs(filename, wgsname=None, boun_cond=None):
         net_id = 0
         while True:
             net_id += 1
-            netname = f.readline().split()  # parse the name of the network
+            netname = f.readline() # parse the name of the network
             if not netname:
                 break
             # parse the header of the network
