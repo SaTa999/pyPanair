@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+from collections import OrderedDict
 from warnings import warn
+from matplotlib.patches import FancyArrowPatch
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, proj3d
-from matplotlib.patches import FancyArrowPatch
 import numpy as np
 import pandas as pd
 
@@ -19,9 +20,8 @@ class LaWGS:
 
     def __init__(self, name):
         self.name = name
-        self._network_names = list()
-        self._networks = list()
-        self._boundary_types = list()
+        self._networks = OrderedDict()
+        self._boundary_types = OrderedDict()
 
     def append_network(self, name, network, boun_type):
         """  append a network to LaWGS
@@ -29,16 +29,15 @@ class LaWGS:
         :param network: a Network object
         :param boun_type: the boundary type of the Network
         """
-        self._network_names.append(name)
-        self._networks.append(network)
-        self._boundary_types.append(boun_type)
+        self._networks[name] = network
+        self._boundary_types[name] = boun_type
 
     def create_wgs(self, filename=None):
         """ create a .wgs file from a LaWGS object"""
         if filename is None:
             filename = "{}.wgs".format(self.name)
         wgs = "{} created by wgs_creator\n".format(self.name)
-        for (net_name, net) in zip(self._network_names, self._networks):
+        for net_name, net in self._networks.items():
             wgs += "{}\n".format(net_name)
             num_rows, num_columns = net.shape[:2]
             wgs += "1 {} {} 0   0 0 0   0 0 0    1 1 1  0\n".format(num_rows, num_columns)
@@ -91,7 +90,7 @@ class LaWGS:
                 ))
                 warn(warn_messege)
             alpha = " ".join(map(str, alpha))
-        boun = " ".join(map(str, self._boundary_types))
+        boun = " ".join(map(str, self._boundary_types.values()))
         aux = ["// Auxiliary files for {}".format(self.name),
                "WGS {}".format(wgs_filename),
                "MACH {}".format(mach),
@@ -138,7 +137,7 @@ class LaWGS:
                 return tri2stl(p0, p1, p2) + tri2stl(p3, p2, p1)
 
         stl_all = "solid {}\n".format(self.name)
-        for (net, boun) in zip(self._networks, self._boundary_types):
+        for net, boun in zip(self._networks.values(), self._boundary_types.values()):
             """ shape of quadrilateral: p0 --- p2
                                         |      |
                                         p1 --- p3"""
