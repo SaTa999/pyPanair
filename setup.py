@@ -48,7 +48,7 @@ if __name__ == "__main__":
           packages=['pyPanair', 'pyPanair.preprocess', 'pyPanair.postprocess'],
           classifiers=[
               'Intended Audience :: Science/Research',
-              'Programming Language :: Python :: 3.6',
+              'Programming Language :: Python :: 3.5',
               'License :: OSI Approved :: MIT License',
               'Topic :: Scientific/Engineering',
               'Operating System :: Microsoft :: Windows'],
